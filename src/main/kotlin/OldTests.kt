@@ -139,49 +139,49 @@ fun <U> createCodecFromKSerializer(serializer: KSerializer<U>): Codec<U> {
     }
 }
 
-fun main() {
-    testObject()
-}
-
-fun testObject() {
-    println("INITIAL:")
-
-    val MY_CODEC = KotlinJsonObjectCodec(Person.serializer(), Json)
-
-    val riebeck = Person("Riebeck", 36, 20.0, JobWork("Salesman"))
-
-    val riebeckJson = Json.encodeToJsonElement(riebeck) as JsonObject
-
-    println("\nENCODED:")
-
-    val riebeckNbt = MY_CODEC.encodeStart(JsonOps.INSTANCE, riebeckJson)
-
-    println(riebeckNbt)
-}
-
-fun testNormal() {
-    println("INITIAL:")
-
-    val PERSON_CODEC = Person.serializer().codec() // Auto-generate codec from Serializable object
-
-    val riebeck = Person("Riebeck", 36, 20.0, JobWork("Salesman"))
-
-    println(riebeck)
-
-    println("\nENCODING:")
-
-    val encodedElement = PERSON_CODEC.encodeStart(JsonOps.INSTANCE, riebeck)
-    println(encodedElement)
-    val result = encodedElement.result().getOrNull()
-    println(result)
-
-    println("\nDECODING:")
-
-    val decodedElement = PERSON_CODEC.parse(JsonOps.INSTANCE, result)
-
-    println(decodedElement)
-    println(decodedElement.result().getOrNull())
-}
+//fun main() {
+//    testObject()
+//}
+//
+//fun testObject() {
+//    println("INITIAL:")
+//
+//    val MY_CODEC = KotlinJsonObjectCodec(Person.serializer(), Json)
+//
+//    val riebeck = Person("Riebeck", 36, 20.0, JobWork("Salesman"))
+//
+//    val riebeckJson = Json.encodeToJsonElement(riebeck) as JsonObject
+//
+//    println("\nENCODED:")
+//
+//    val riebeckNbt = MY_CODEC.encodeStart(JsonOps.INSTANCE, riebeckJson)
+//
+//    println(riebeckNbt)
+//}
+//
+//fun testNormal() {
+//    println("INITIAL:")
+//
+//    val PERSON_CODEC = Person.serializer().codec() // Auto-generate codec from Serializable object
+//
+//    val riebeck = Person("Riebeck", 36, 20.0, JobWork("Salesman"))
+//
+//    println(riebeck)
+//
+//    println("\nENCODING:")
+//
+//    val encodedElement = PERSON_CODEC.encodeStart(JsonOps.INSTANCE, riebeck)
+//    println(encodedElement)
+//    val result = encodedElement.result().getOrNull()
+//    println(result)
+//
+//    println("\nDECODING:")
+//
+//    val decodedElement = PERSON_CODEC.parse(JsonOps.INSTANCE, result)
+//
+//    println(decodedElement)
+//    println(decodedElement.result().getOrNull())
+//}
 
 
 class KotlinJsonCodecLegacySimpleProof : Codec<JsonElement> {

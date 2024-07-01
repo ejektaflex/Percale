@@ -12,9 +12,13 @@ fun <T, U : Any> serializeWithDynamicOps(obj: U, serializer: KSerializer<U>, ops
 
 fun main() {
     //val data = Person("Abe", 25, 20.0, JobWork("Salesman"), JobWork("Pottery"))
-    val data = Vehicle(listOf("a", "b", "c"), Person(
-        "Bob", 32, 20.0, JobWork("Salesman"), JobWork("Potterman")
-    ))
+    val data = Vehicle(
+        listOf(
+            Person("Bob"),
+            Person("Alice"),
+            Person("Jimothy"),
+        )
+    )
     val encodedData = serializeWithDynamicOps(data, Vehicle.serializer(), JsonOps.INSTANCE)
     println("Encoded Data: $encodedData")
 }
