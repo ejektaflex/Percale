@@ -1,5 +1,6 @@
 package io.ejekta.kambrikx.serial
 
+import AbstractOpEncoder
 import com.mojang.serialization.DynamicOps
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationStrategy
@@ -9,49 +10,46 @@ import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.modules.EmptySerializersModule
 
 @OptIn(ExperimentalSerializationApi::class)
-class DynamicEncoder<T>(private val ops: DynamicOps<T>) : AbstractEncoder() {
+class DynamicArrayEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncoder<T>() {
 
-    private val mapBuilder = mutableMapOf<String, T>()
-    val nestedEncoders = mutableMapOf<String, DynamicEncoder<T>>()
+    var currentIndex = 0
+    private val listBuilder = mutableListOf<T>()
+    val nestedEncoders = mutableMapOf<String, DynamicArrayEncoder<T>>()
 
     override val serializersModule = EmptySerializersModule()
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
-        if (currentTag == "") {
-            return this
-        }
-        println("Beginning Structure: $descriptor for key: $currentTag")
-        val nestedEncoder = DynamicEncoder(ops)
-        nestedEncoders[currentTag] = nestedEncoder
-        return nestedEncoder
+        return this
+//        println("Beginning Structure: $descriptor for key: $currentTag - (${descriptor.kind})")
+//        val nestedEncoder = DynamicArrayEncoder(ops)
+//        nestedEncoders[currentTag] = nestedEncoder
+//        return nestedEncoder
     }
 
 
     override fun endStructure(descriptor: SerialDescriptor) {
-        println("Ending Structure: $descriptor")
-        if (nestedEncoders.isNotEmpty()) {
-            for ((neKey, neVal) in nestedEncoders) {
-                mapBuilder[neKey] = neVal.getResult()
-            }
-        }
+//        println("Ending Structure: $descriptor")
+//        if (nestedEncoders.isNotEmpty()) {
+//            for ((neKey, neVal) in nestedEncoders) {
+//                listBuilder[neKey] = neVal.getResult()
+//            }
+//        }
     }
 
     override fun encodeString(value: String) {
-        println("Encoding string: $value")
-        mapBuilder[currentTag] = ops.createString(value)
+        listBuilder.add(ops.createString(value))
     }
 
     override fun encodeInt(value: Int) {
-        println("Encoding int")
-        mapBuilder[currentTag] = ops.createInt(value)
+        listBuilder.add(ops.createInt(value))
     }
 
     override fun encodeBoolean(value: Boolean) {
-        mapBuilder[currentTag] = ops.createBoolean(value)
+        listBuilder.add(ops.createBoolean(value))
     }
 
     override fun encodeDouble(value: Double) {
-        mapBuilder[currentTag] = ops.createDouble(value)
+        listBuilder.add(ops.createDouble(value))
     }
 
     override fun <T> encodeSerializableValue(serializer: SerializationStrategy<T>, value: T) {
@@ -66,15 +64,13 @@ class DynamicEncoder<T>(private val ops: DynamicOps<T>) : AbstractEncoder() {
 
     // Implement other encode methods as necessary...
 
-    fun getResult(): T {
-        return ops.createMap(mapBuilder.map { entry -> ops.createString(entry.key) to entry.value }.toMap())
-        //return ops.createMap(mapBuilder.mapValues { ops.createString(it.value.toString()) })
+    override fun getResult(): T {
+        return ops.createList(listBuilder.stream())
     }
 
     // To handle current tag (field name) context
-    private var currentTag: String = ""
     override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {
-        currentTag = descriptor.getElementName(index)
+        currentIndex = index
         return true
     }
 }

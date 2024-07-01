@@ -11,3 +11,6 @@ data class Person(
     val jobWork: JobWork = JobWork("No Job"),
     val jobHobby: JobWork = JobWork("No Hobby")
 )
+
+@Serializable
+data class Vehicle(val tirePressures: List<Double>, val usage: JobWork)
