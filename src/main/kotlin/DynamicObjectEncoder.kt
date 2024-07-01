@@ -39,6 +39,7 @@ class DynamicObjectEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncode
 
     override fun endStructure(descriptor: SerialDescriptor) {
         println("Ending Structure: $descriptor")
+        // Merge any nested encoders that were created over the course of this structure into the structure itself
         if (nestedEncoders.isNotEmpty()) {
             for ((neKey, neVal) in nestedEncoders) {
                 mapBuilder[neKey] = neVal.getResult()
@@ -46,18 +47,11 @@ class DynamicObjectEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncode
         }
     }
 
-    override fun beginCollection(descriptor: SerialDescriptor, collectionSize: Int): CompositeEncoder {
-        println("BEGINNING COLLECTION: $descriptor - ${descriptor.kind}")
-        return super.beginCollection(descriptor, collectionSize)
-    }
-
     override fun encodeString(value: String) {
-        println("Encoding string: $value")
         mapBuilder[currentTag] = ops.createString(value)
     }
 
     override fun encodeInt(value: Int) {
-        println("Encoding int")
         mapBuilder[currentTag] = ops.createInt(value)
     }
 
@@ -69,21 +63,8 @@ class DynamicObjectEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncode
         mapBuilder[currentTag] = ops.createDouble(value)
     }
 
-    override fun <T> encodeSerializableValue(serializer: SerializationStrategy<T>, value: T) {
-        println("Serializing value..: $value")
-//        val obj = DynamicEncoder(ops).apply {
-//            encodeSerializableValue(serializer, value)
-//        }.getResult()
-        super.encodeSerializableValue(serializer, value)
-        //println("Ended serializing value ($value). Got: ${nestedEncoders.last().getResult()}")
-        println("BTW: nested has: ${nestedEncoders.size}")
-    }
-
-    // Implement other encode methods as necessary...
-
     override fun getResult(): T {
         return ops.createMap(mapBuilder.map { entry -> ops.createString(entry.key) to entry.value }.toMap())
-        //return ops.createMap(mapBuilder.mapValues { ops.createString(it.value.toString()) })
     }
 
     override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {

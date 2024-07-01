@@ -13,4 +13,4 @@ data class Person(
 )
 
 @Serializable
-data class Vehicle(val tirePressures: List<Double>, val usage: JobWork)
+data class Vehicle(val tirePressures: List<String>, val owner: Person)
