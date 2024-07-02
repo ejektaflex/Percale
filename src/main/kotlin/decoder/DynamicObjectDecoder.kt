@@ -1,17 +1,12 @@
 package decoder
 
+import com.mojang.serialization.DataResult
 import com.mojang.serialization.DynamicOps
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.StructureKind
-import kotlinx.serialization.encoding.AbstractDecoder
 import kotlinx.serialization.encoding.CompositeDecoder
-import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.modules.EmptySerializersModule
-import kotlinx.serialization.modules.SerializersModule
 import kotlin.jvm.optionals.getOrNull
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -20,11 +15,23 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
     override val serializersModule = EmptySerializersModule()
 
     private val inputMap = ops.getMap(input).result().getOrNull()
-    private var currentIndex = 0
-    private val mapKeys = inputMap?.entries()?.map { entry -> entry.first }?.toList() ?: emptyList()
+    private var currentIndex = -1
+    private var mapKeys = emptyList<String>()
 
-    private val currentKey: T
-        get() = mapKeys[currentIndex]
+    private val currentKey: String?
+        get() {
+            if (currentIndex < 0) return null
+            return mapKeys[currentIndex]
+        }
+
+    private fun getMapKey(descriptor: SerialDescriptor): String {
+        return descriptor.getElementName(currentIndex)
+    }
+
+    private fun getCurrentKey(descriptor: SerialDescriptor): T? {
+        if (currentIndex < 0) return null
+        return inputMap?.get(getMapKey(descriptor))
+    }
 
     // If inputMap is null, then it was not a map and thus is a primitive
     private val currentValue: T
@@ -37,24 +44,30 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
     //private var shortCircuitKey = false
 
     override fun decodeSequentially(): Boolean {
-        return true
+        return false
     }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
-        println("Beginning Structure: $descriptor for key: $currentKey - (${descriptor.kind})")
+        val mapKeyNames = (0..<descriptor.elementsCount).map { descriptor.getElementName(it) }
+        println("MAPKEYNAMES: $mapKeyNames")
+        mapKeys = mapKeyNames
+        println("Beginning Structure: $descriptor (${descriptor.kind}) with start key: ${getCurrentKey(descriptor)} - $currentIndex")
         // Root decoder will have no tag name
-        if (currentKey == "") {
-            println("Is root decoder")
-            return this
-        }
-        val nestedDecoder = pickDecoder(descriptor, ops, input)
-        println("Was not root encoder, using based on ${descriptor.kind}")
-        nestedDecoders[currentKey] = nestedDecoder
-        return nestedDecoder
+        return this
+//        val nestedDecoder = pickDecoder(descriptor, ops, currentValue)
+//        println("Was not root decoder, using based on ${descriptor.kind}")
+//        nestedDecoders[currentKey] = nestedDecoder
+//        return nestedDecoder
     }
 
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int {
-        return if (currentIndex < mapKeys.size) currentIndex++ else CompositeDecoder.DECODE_DONE
+        currentIndex += 1
+        if (currentIndex >= mapKeys.size) {
+            return CompositeDecoder.DECODE_DONE
+        }
+        val descName = descriptor.getElementName(currentIndex)
+        println("STRT EL DEC: $currentIndex ${mapKeys.size} - $descName ||| ${inputMap?.entries()?.toList()?.size}")
+        return currentIndex
     }
 
     override fun endStructure(descriptor: SerialDescriptor) {
@@ -68,35 +81,37 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
     }
 
     override fun decodeString(): String {
-        return ops.getStringValue(currentValue).orThrow
+        return decodeFunc { ops.getStringValue(currentValue) }
     }
 
     override fun decodeInt(): Int {
-        return ops.getNumberValue(currentValue).orThrow.toInt()
+        return decodeFunc { ops.getNumberValue(currentValue) }.toInt()
     }
 
     override fun decodeBoolean(): Boolean {
-        return ops.getBooleanValue(currentValue).orThrow
+        return decodeFunc { ops.getBooleanValue(currentValue) }
     }
 
     override fun decodeLong(): Long {
-        return ops.getNumberValue(currentValue).orThrow.toLong()
+        return decodeFunc { ops.getNumberValue(currentValue) }.toLong()
     }
 
     override fun decodeFloat(): Float {
-        return ops.getNumberValue(currentValue).orThrow.toFloat()
+        return decodeFunc { ops.getNumberValue(currentValue) }.toFloat()
     }
 
     override fun decodeDouble(): Double {
-        return ops.getNumberValue(currentValue).orThrow.toDouble()
+        return decodeFunc { ops.getNumberValue(currentValue) }.toDouble()
     }
 
     override fun decodeEnum(enumDescriptor: SerialDescriptor): Int {
-        return enumDescriptor.getElementIndex(ops.getStringValue(currentValue).orThrow)
+        return enumDescriptor.getElementIndex(decodeString())
     }
 
-    override fun decodeFunc(func: () -> T) {
-        TODO("Not yet implemented")
+    override fun <V> decodeFunc(func: () -> DataResult<V>): V {
+        println("Decoding $currentIndex - $currentKey - $currentValue")
+        val dataResult = func()
+        return dataResult.orThrow
     }
 
     override fun decodeInlineElement(descriptor: SerialDescriptor, index: Int): Decoder {

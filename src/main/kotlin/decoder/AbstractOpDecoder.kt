@@ -1,5 +1,6 @@
 package decoder
 
+import com.mojang.serialization.DataResult
 import com.mojang.serialization.DynamicOps
 import encoder.AbstractOpEncoder
 import encoder.DynamicListEncoder
@@ -15,7 +16,7 @@ import kotlinx.serialization.encoding.AbstractEncoder
 
 @OptIn(ExperimentalSerializationApi::class)
 abstract class AbstractOpDecoder<T>(open val ops: DynamicOps<T>) : AbstractDecoder() {
-    abstract fun decodeFunc(func: () -> T)
+    abstract fun <V> decodeFunc(func: () -> DataResult<V>): V
 
     companion object {
         fun <V> pickDecoder(descriptor: SerialDescriptor, ops: DynamicOps<V>, input: V): AbstractOpDecoder<V> {

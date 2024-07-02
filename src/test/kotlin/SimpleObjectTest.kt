@@ -1,3 +1,5 @@
+import com.google.gson.JsonElement
+import com.google.gson.JsonParser
 import com.mojang.serialization.JsonOps
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
@@ -11,6 +13,7 @@ class SimpleObjectTest {
     val ops = JsonOps.INSTANCE
 
     // Objects consisting of primitives
+
     @Test fun testEncodeSimpleObject() {
         val result = ops.serialize(jimothy)
         expectThat(result.toString()) {
@@ -18,6 +21,20 @@ class SimpleObjectTest {
                 {"name":"Jimothy","age":36}
             """.trimIndent())
         }
+    }
+
+    @Test fun testDecodeSimpleObject() {
+        val result = ops.deserialize<JsonElement, TestData.Person>(JsonParser.parseString("""
+            {"name":"Jimothy","age":36}
+        """.trimIndent()))
+        expectThat(result).isEqualTo(jimothy)
+    }
+
+    @Test fun testDecodeSimpleObjectReversed() {
+        val result = ops.deserialize<JsonElement, TestData.Person>(JsonParser.parseString("""
+            {"age":36,"name":"Jimothy"}
+        """.trimIndent()))
+        expectThat(result).isEqualTo(jimothy)
     }
 
     // Just a simple map object
