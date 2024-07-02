@@ -14,16 +14,16 @@ import kotlinx.serialization.modules.EmptySerializersModule
 @OptIn(ExperimentalSerializationApi::class)
 class DynamicArrayEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncoder<T>() {
 
-    var currentIndex = 0
+    private var lastIndex = -1
+    private var currentIndex = -1
+
     private val listBuilder = mutableListOf<T>()
     private val nestedEncoders = mutableListOf<AbstractOpEncoder<T>>()
 
     override val serializersModule = EmptySerializersModule()
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
-        println("LISTY: $descriptor - $currentIndex")
-        // Root encoder will have index 0
-        if (currentIndex == 0) {
+        if (lastIndex == currentIndex) {
             return this
         }
         println(descriptor.kind)
@@ -37,7 +37,6 @@ class DynamicArrayEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncoder
     }
 
     override fun endStructure(descriptor: SerialDescriptor) {
-        println("LISTE: $descriptor - leftover: $nestedEncoders")
         for (nestedEncoder in nestedEncoders) {
             listBuilder.add(nestedEncoder.getResult())
         }
@@ -48,7 +47,7 @@ class DynamicArrayEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncoder
     }
 
     override fun encodeInt(value: Int) {
-        println("Encoding int: $value")
+        println("Encoding int: $value from $this")
         listBuilder.add(ops.createInt(value))
     }
 
@@ -60,16 +59,12 @@ class DynamicArrayEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncoder
         listBuilder.add(ops.createDouble(value))
     }
 
-    override fun <T> encodeSerializableValue(serializer: SerializationStrategy<T>, value: T) {
-        super.encodeSerializableValue(serializer, value)
-    }
-
     override fun getResult(): T {
         return ops.createList(listBuilder.stream())
     }
 
     override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {
-        println("ENCODE CALL: $descriptor - $index")
+        lastIndex = currentIndex
         currentIndex = index
         return true
     }

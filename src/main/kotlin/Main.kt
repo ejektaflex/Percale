@@ -35,14 +35,3 @@ fun main() {
     val encodedData = JsonOps.INSTANCE.serialize(data)
     println("Encoded Data: $encodedData")
 }
-
-class SimpleObjectTest {
-    data class Person(val name: String, val age: Int)
-
-    val jimothy = Person("Jimothy", 36)
-
-    fun simpleObject() {
-
-    }
-
-}
