@@ -47,7 +47,6 @@ class DynamicArrayEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncoder
     }
 
     override fun encodeInt(value: Int) {
-        println("Encoding int: $value from $this")
         listBuilder.add(ops.createInt(value))
     }
 
@@ -57,6 +56,14 @@ class DynamicArrayEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncoder
 
     override fun encodeDouble(value: Double) {
         listBuilder.add(ops.createDouble(value))
+    }
+
+    override fun encodeFloat(value: Float) {
+        listBuilder.add(ops.createFloat(value))
+    }
+
+    override fun encodeLong(value: Long) {
+        listBuilder.add(ops.createLong(value))
     }
 
     override fun getResult(): T {

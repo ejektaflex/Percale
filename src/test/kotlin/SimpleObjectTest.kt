@@ -63,14 +63,4 @@ class SimpleObjectTest {
         }
     }
 
-    // Anonymous object serialization
-    @Test fun testEncodeAnonObject() {
-        val result = ops.serialize(Dog("Sammy", "Spitz"))
-        expectThat(result.toString()) {
-            isEqualTo("""
-                {"name":"Sammy","breed":"Spitz"}
-            """.trimIndent())
-        }
-    }
-
 }

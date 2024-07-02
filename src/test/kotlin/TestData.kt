@@ -7,4 +7,9 @@ object TestData {
     @Serializable
     data class PersonGroup(val personA: Person, val personB: Person)
 
+    enum class DogBreed {
+        POMERANIAN,
+        HUSKY
+    }
+
 }

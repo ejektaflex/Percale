@@ -7,6 +7,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
+import kotlinx.serialization.descriptors.capturedKClass
 import kotlinx.serialization.encoding.AbstractEncoder
 import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.encoding.encodeStructure
@@ -67,6 +68,10 @@ class DynamicObjectEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncode
         }
     }
 
+    override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
+        mapBuilder[currentTag] = ops.createString(enumDescriptor.getElementName(index))
+    }
+
     override fun encodeBoolean(value: Boolean) {
         mapBuilder[currentTag] = ops.createBoolean(value)
     }
@@ -75,11 +80,24 @@ class DynamicObjectEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncode
         mapBuilder[currentTag] = ops.createDouble(value)
     }
 
+    override fun encodeFloat(value: Float) {
+        mapBuilder[currentTag] = ops.createFloat(value)
+    }
+
+    override fun encodeLong(value: Long) {
+        mapBuilder[currentTag] = ops.createLong(value)
+    }
+
     override fun getResult(): T {
+        // We only ever encoded a single primitive if this happened
+        if (mapBuilder.keys.intersect(setOf("")).size == 1) {
+            return mapBuilder[""]!!
+        }
         return ops.createMap(mapBuilder.map { entry -> ops.createString(entry.key) to entry.value }.toMap())
     }
 
     override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {
+        println("Encoding element: $descriptor $index")
         if (descriptor.kind == StructureKind.MAP) {
             shortCircuitKey = (index % 2 == 0) // Every even index will short circuit key
             return true
