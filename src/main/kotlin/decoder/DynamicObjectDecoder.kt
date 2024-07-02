@@ -25,31 +25,17 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
         }
 
     // If inputMap is null, then it was not a map and thus is a primitive
-    private val currentValue: T
+    override val currentValue: T
         get() {
             return inputMap?.get(currentKey) ?: input
         }
 
     private val nestedDecoders = mutableMapOf<T, AbstractOpDecoder<T>>()
 
-    private var shortCircuitKey = false
-
-    override fun decodeSequentially(): Boolean {
-        return false
-    }
-
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
         // Assign keys to iterate over based on descriptor element order
         mapKeys = (0..<descriptor.elementsCount).map { descriptor.getElementName(it) }
-        println("Beginning Structure: $descriptor (${descriptor.kind}) with start key: $currentKey - $currentIndex")
-        println("Mapkeys are: $mapKeys")
-        println("MapInput is: $inputMap")
-        // Root decoder will have no tag name
         return this
-//        val nestedDecoder = pickDecoder(descriptor, ops, currentValue)
-//        println("Was not root decoder, using based on ${descriptor.kind}")
-//        nestedDecoders[currentKey] = nestedDecoder
-//        return nestedDecoder
     }
 
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int {
@@ -70,33 +56,7 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
         }
     }
 
-    override fun decodeString(): String {
-        return decodeFunc { ops.getStringValue(currentValue) }
-    }
 
-    override fun decodeInt(): Int {
-        return decodeFunc { ops.getNumberValue(currentValue) }.toInt()
-    }
-
-    override fun decodeBoolean(): Boolean {
-        return decodeFunc { ops.getBooleanValue(currentValue) }
-    }
-
-    override fun decodeLong(): Long {
-        return decodeFunc { ops.getNumberValue(currentValue) }.toLong()
-    }
-
-    override fun decodeFloat(): Float {
-        return decodeFunc { ops.getNumberValue(currentValue) }.toFloat()
-    }
-
-    override fun decodeDouble(): Double {
-        return decodeFunc { ops.getNumberValue(currentValue) }.toDouble()
-    }
-
-    override fun decodeEnum(enumDescriptor: SerialDescriptor): Int {
-        return enumDescriptor.getElementIndex(decodeString())
-    }
 
     override fun <V> decodeFunc(func: () -> DataResult<V>): V {
         println("Decoding $currentIndex - $currentKey - $currentValue")

@@ -13,25 +13,12 @@ class DynamicMapDecoder<T>(override val ops: DynamicOps<T>, private val input: T
 
     private var currentIndex = -1
 
+    override val currentValue: T
+        get() = entries[currentIndex]
+
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int {
         currentIndex += 1
         return if (currentIndex < entries.size) currentIndex else CompositeDecoder.DECODE_DONE
-    }
-
-    override fun decodeString(): String {
-        return ops.getStringValue(entries[currentIndex]).orThrow
-    }
-
-    override fun decodeInt(): Int {
-        return ops.getNumberValue(entries[currentIndex]).orThrow.toInt()
-    }
-
-    override fun decodeNotNullMark(): Boolean {
-        return true
-    }
-
-    override fun decodeNull(): Nothing? {
-        return null
     }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
