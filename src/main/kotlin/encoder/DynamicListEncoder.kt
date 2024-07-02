@@ -1,18 +1,15 @@
-package io.ejekta.kambrikx.serial
+package encoder
 
-import AbstractOpEncoder
 import com.mojang.serialization.DynamicOps
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
-import kotlinx.serialization.encoding.AbstractEncoder
 import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.modules.EmptySerializersModule
 
 @OptIn(ExperimentalSerializationApi::class)
-class DynamicArrayEncoder<T>(override val ops: DynamicOps<T>) : AbstractOpEncoder<T>(ops) {
+class DynamicListEncoder<T>(override val ops: DynamicOps<T>) : AbstractOpEncoder<T>(ops) {
 
     override fun encodeFunc(func: () -> T) {
         push(func())
@@ -36,9 +33,9 @@ class DynamicArrayEncoder<T>(override val ops: DynamicOps<T>) : AbstractOpEncode
         }
         println(descriptor.kind)
         val nestedEncoder: AbstractOpEncoder<T> = when (descriptor.kind) {
-            StructureKind.CLASS -> DynamicObjectEncoder(ops)
-            StructureKind.LIST -> DynamicArrayEncoder(ops)
-            else -> throw SerializationException("unsupported descriptor type for our custom array encoder")
+            StructureKind.CLASS, StructureKind.MAP -> DynamicObjectEncoder(ops)
+            StructureKind.LIST -> DynamicListEncoder(ops)
+            else -> throw SerializationException("unsupported descriptor type for our custom array encoder: ${descriptor.kind}")
         }
         nestedEncoders.add(nestedEncoder)
         return nestedEncoder

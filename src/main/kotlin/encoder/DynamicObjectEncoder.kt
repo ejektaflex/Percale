@@ -1,6 +1,5 @@
-package io.ejekta.kambrikx.serial
+package encoder
 
-import AbstractOpEncoder
 import com.mojang.serialization.DynamicOps
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
@@ -41,9 +40,8 @@ class DynamicObjectEncoder<T>(override val ops: DynamicOps<T>) : AbstractOpEncod
             return this
         }
         val nestedEncoder: AbstractOpEncoder<T> = when (descriptor.kind) {
-            is StructureKind.CLASS -> DynamicObjectEncoder(ops)
-            is StructureKind.LIST -> DynamicArrayEncoder(ops)
-            is StructureKind.MAP -> DynamicObjectEncoder(ops)
+            is StructureKind.CLASS, is StructureKind.MAP -> DynamicObjectEncoder(ops)
+            is StructureKind.LIST -> DynamicListEncoder(ops)
             else -> throw Exception("What encoder do we use for this?: ${descriptor.kind} - $descriptor")
         }
         nestedEncoders[currentTag] = nestedEncoder
