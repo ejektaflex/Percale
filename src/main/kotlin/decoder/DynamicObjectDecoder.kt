@@ -24,15 +24,6 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
             return mapKeys[currentIndex]
         }
 
-    private fun getMapKey(descriptor: SerialDescriptor): String {
-        return descriptor.getElementName(currentIndex)
-    }
-
-    private fun getCurrentKey(descriptor: SerialDescriptor): T? {
-        if (currentIndex < 0) return null
-        return inputMap?.get(getMapKey(descriptor))
-    }
-
     // If inputMap is null, then it was not a map and thus is a primitive
     private val currentValue: T
         get() {
@@ -48,10 +39,9 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
     }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
-        val mapKeyNames = (0..<descriptor.elementsCount).map { descriptor.getElementName(it) }
-        println("MAPKEYNAMES: $mapKeyNames")
-        mapKeys = mapKeyNames
-        println("Beginning Structure: $descriptor (${descriptor.kind}) with start key: ${getCurrentKey(descriptor)} - $currentIndex")
+        // Assign keys to iterate over based on descriptor element order
+        mapKeys = (0..<descriptor.elementsCount).map { descriptor.getElementName(it) }
+        println("Beginning Structure: $descriptor (${descriptor.kind}) with start key: $currentKey - $currentIndex")
         // Root decoder will have no tag name
         return this
 //        val nestedDecoder = pickDecoder(descriptor, ops, currentValue)
@@ -65,8 +55,6 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
         if (currentIndex >= mapKeys.size) {
             return CompositeDecoder.DECODE_DONE
         }
-        val descName = descriptor.getElementName(currentIndex)
-        println("STRT EL DEC: $currentIndex ${mapKeys.size} - $descName ||| ${inputMap?.entries()?.toList()?.size}")
         return currentIndex
     }
 
