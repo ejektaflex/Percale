@@ -39,11 +39,7 @@ class DynamicObjectEncoder<T>(override val ops: DynamicOps<T>) : AbstractOpEncod
         if (currentTag == "") {
             return this
         }
-        val nestedEncoder: AbstractOpEncoder<T> = when (descriptor.kind) {
-            is StructureKind.CLASS, is StructureKind.MAP -> DynamicObjectEncoder(ops)
-            is StructureKind.LIST -> DynamicListEncoder(ops)
-            else -> throw Exception("What encoder do we use for this?: ${descriptor.kind} - $descriptor")
-        }
+        val nestedEncoder = pickEncoder(descriptor, ops)
         nestedEncoders[currentTag] = nestedEncoder
         return nestedEncoder
     }

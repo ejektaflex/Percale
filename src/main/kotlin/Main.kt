@@ -1,22 +1,20 @@
-import com.mojang.serialization.*
+import com.mojang.serialization.DataResult
+import com.mojang.serialization.DynamicOps
+import com.mojang.serialization.Encoder
+import com.mojang.serialization.JsonOps
 import decoder.DynamicObjectDecoder
-import encoder.DynamicListEncoder
-import encoder.DynamicObjectEncoder
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.StructureKind
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.encodeToJsonElement
+import encoder.AbstractOpEncoder
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.SerializationStrategy
+import kotlinx.serialization.serializer
 
 // ### Encoding ###
 
 @OptIn(ExperimentalSerializationApi::class)
 fun <T, U : Any> encodeWithDynamicOps(serializer: SerializationStrategy<U>, obj: U, ops: DynamicOps<T>): T? {
     println("Picking kind: ${serializer.descriptor.kind}")
-    val encoder = when (serializer.descriptor.kind) {
-        StructureKind.LIST -> DynamicListEncoder(ops)
-        else -> DynamicObjectEncoder(ops)
-    }
+    val encoder = AbstractOpEncoder.pickEncoder(serializer.descriptor, ops)
     encoder.encodeSerializableValue(serializer, obj)
     return encoder.getResult()
 }
@@ -56,6 +54,8 @@ fun main() {
     val bob = Person("Bob")
 
     val bobEncoded = JsonOps.INSTANCE.serialize(bob)
+
+    println("\n\n### DECODING NOW! ###\n\n")
 
     val bobDecoded = decodeWithDynamicOps(Person.serializer(), bobEncoded!!, JsonOps.INSTANCE)
 

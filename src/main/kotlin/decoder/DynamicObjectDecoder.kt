@@ -18,6 +18,8 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
 
     override val serializersModule = EmptySerializersModule()
 
+    val inputMap = ops.getMap(input).orThrow
+
     // To handle current tag (field name) context
     private var currentTag: String = ""
 
@@ -41,6 +43,7 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
             //is StructureKind.LIST -> DynamicListEncoder(ops)
             else -> throw Exception("What encoder do we use for this?: ${descriptor.kind} - $descriptor")
         }
+        println("Was not root encoder, using based on ${descriptor.kind}")
         nestedDecoders[currentTag] = nestedDecoder
         return nestedDecoder
     }
@@ -54,7 +57,7 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
         // Merge any nested encoders that were created over the course of this structure into the structure itself
         if (nestedDecoders.isNotEmpty()) {
             for ((neKey, neVal) in nestedDecoders) {
-                mapBuilder[neKey] = neVal.getResult()
+                //mapBuilder[neKey] = neVal.getResult()
             }
         }
     }
@@ -69,14 +72,6 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
 
     override fun decodeBoolean(): Boolean {
         return ops.getBooleanValue(input).orThrow
-    }
-
-    override fun getResult(): T {
-        // We only ever encoded a single primitive if this happened
-        if (mapBuilder.keys.intersect(setOf("")).size == 1) {
-            return mapBuilder[""]!!
-        }
-        return ops.createMap(mapBuilder.map { entry -> ops.createString(entry.key) to entry.value }.toMap())
     }
 
     override fun push(result: T) {

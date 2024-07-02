@@ -2,7 +2,11 @@ package encoder
 
 import com.mojang.serialization.DynamicOps
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.SerialKind
+import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.encoding.AbstractEncoder
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -38,4 +42,15 @@ abstract class AbstractOpEncoder<T>(open val ops: DynamicOps<T>) : AbstractEncod
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
         encodeFunc { ops.createString(enumDescriptor.getElementName(index)) }
     }
+
+    companion object {
+        fun <T> pickEncoder(descriptor: SerialDescriptor, ops: DynamicOps<T>): AbstractOpEncoder<T> {
+            return when (descriptor.kind) {
+                StructureKind.CLASS, StructureKind.MAP, is PrimitiveKind, SerialKind.ENUM -> DynamicObjectEncoder(ops)
+                StructureKind.LIST -> DynamicListEncoder(ops)
+                else -> throw SerializationException("Unsupported descriptor type for our DynamicOps encoder: ${descriptor.kind}, ${descriptor.kind::class}")
+            }
+        }
+    }
+
 }

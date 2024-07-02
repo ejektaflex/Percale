@@ -8,7 +8,6 @@ import kotlinx.serialization.encoding.AbstractEncoder
 
 @OptIn(ExperimentalSerializationApi::class)
 abstract class AbstractOpDecoder<T>(open val ops: DynamicOps<T>) : AbstractDecoder() {
-    abstract fun getResult(): T
     abstract fun decodeFunc(func: () -> T)
     abstract fun push(result: T)
 }

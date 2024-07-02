@@ -2,9 +2,7 @@ package encoder
 
 import com.mojang.serialization.DynamicOps
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.modules.EmptySerializersModule
 
@@ -32,11 +30,7 @@ class DynamicListEncoder<T>(override val ops: DynamicOps<T>) : AbstractOpEncoder
             return this
         }
         println(descriptor.kind)
-        val nestedEncoder: AbstractOpEncoder<T> = when (descriptor.kind) {
-            StructureKind.CLASS, StructureKind.MAP -> DynamicObjectEncoder(ops)
-            StructureKind.LIST -> DynamicListEncoder(ops)
-            else -> throw SerializationException("unsupported descriptor type for our custom array encoder: ${descriptor.kind}")
-        }
+        val nestedEncoder = pickEncoder(descriptor, ops)
         nestedEncoders.add(nestedEncoder)
         return nestedEncoder
     }
