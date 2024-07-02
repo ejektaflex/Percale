@@ -1,24 +1,48 @@
-import com.mojang.serialization.Codec
 import com.mojang.serialization.DynamicOps
 import com.mojang.serialization.JsonOps
+import io.ejekta.kambrikx.serial.DynamicArrayEncoder
 import io.ejekta.kambrikx.serial.DynamicObjectEncoder
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.StructureKind
+import kotlinx.serialization.serializer
 
-fun <T, U : Any> serializeWithDynamicOps(obj: U, serializer: KSerializer<U>, ops: DynamicOps<T>): T? {
-    val encoder = DynamicObjectEncoder(ops)
+@OptIn(ExperimentalSerializationApi::class)
+fun <T, U : Any> serializeWithDynamicOps(serializer: KSerializer<U>, obj: U, ops: DynamicOps<T>): T? {
+    val encoder = when (serializer.descriptor.kind) {
+        StructureKind.LIST -> DynamicArrayEncoder(ops)
+        else -> DynamicObjectEncoder(ops)
+    }
     encoder.encodeSerializableValue(serializer, obj)
     return encoder.getResult()
 }
 
+inline fun <T, reified U : Any> DynamicOps<T>.serialize(obj: U): T? {
+    return serializeWithDynamicOps(serializer<U>(), obj, this)
+}
+
 fun main() {
-    //val data = Person("Abe", 25, 20.0, JobWork("Salesman"), JobWork("Pottery"))
-    val data = Vehicle(
-        listOf(
-            Person("Bob"),
-            Person("Alice"),
-            Person("Jimothy"),
-        )
+    val data = mutableListOf(
+        listOf(1, 2, 3),
+        listOf(4, 5, 6),
+        listOf(7, 8, 9)
     )
-    val encodedData = serializeWithDynamicOps(data, Vehicle.serializer(), JsonOps.INSTANCE)
+    val data2 = mutableListOf(
+        1, 2, 3
+    )
+    val encodedData = JsonOps.INSTANCE.serialize(data)
     println("Encoded Data: $encodedData")
+}
+
+class SimpleObjectTest {
+    data class Person(val name: String, val age: Int)
+
+    val jimothy = Person("Jimothy", 36)
+
+    fun simpleObject() {
+
+    }
+
 }

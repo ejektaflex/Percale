@@ -22,11 +22,11 @@ class DynamicObjectEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncode
     override val serializersModule = EmptySerializersModule()
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
+        println("Beginning Structure: $descriptor for key: $currentTag - (${descriptor.kind})")
         // Root encoder will have no tag name
         if (currentTag == "") {
             return this
         }
-        println("Beginning Structure: $descriptor for key: $currentTag - (${descriptor.kind})")
         val nestedEncoder: AbstractOpEncoder<T> = when (descriptor.kind) {
             is StructureKind.CLASS -> DynamicObjectEncoder(ops)
             is StructureKind.LIST -> DynamicArrayEncoder(ops)

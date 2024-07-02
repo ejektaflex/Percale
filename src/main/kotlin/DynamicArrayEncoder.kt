@@ -21,10 +21,15 @@ class DynamicArrayEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncoder
     override val serializersModule = EmptySerializersModule()
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
-        println("LISTY: $descriptor")
+        println("LISTY: $descriptor - $currentIndex")
+        // Root encoder will have index 0
+        if (currentIndex == 0) {
+            return this
+        }
         println(descriptor.kind)
         val nestedEncoder: AbstractOpEncoder<T> = when (descriptor.kind) {
             StructureKind.CLASS -> DynamicObjectEncoder(ops)
+            StructureKind.LIST -> DynamicArrayEncoder(ops)
             else -> throw SerializationException("unsupported descriptor type for our custom array encoder")
         }
         nestedEncoders.add(nestedEncoder)
@@ -32,6 +37,7 @@ class DynamicArrayEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncoder
     }
 
     override fun endStructure(descriptor: SerialDescriptor) {
+        println("LISTE: $descriptor - leftover: $nestedEncoders")
         for (nestedEncoder in nestedEncoders) {
             listBuilder.add(nestedEncoder.getResult())
         }
@@ -42,6 +48,7 @@ class DynamicArrayEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncoder
     }
 
     override fun encodeInt(value: Int) {
+        println("Encoding int: $value")
         listBuilder.add(ops.createInt(value))
     }
 
@@ -62,6 +69,7 @@ class DynamicArrayEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncoder
     }
 
     override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {
+        println("ENCODE CALL: $descriptor - $index")
         currentIndex = index
         return true
     }
