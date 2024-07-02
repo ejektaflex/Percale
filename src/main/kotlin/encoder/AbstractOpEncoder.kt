@@ -44,7 +44,7 @@ abstract class AbstractOpEncoder<T>(open val ops: DynamicOps<T>) : AbstractEncod
     }
 
     companion object {
-        fun <T> pickEncoder(descriptor: SerialDescriptor, ops: DynamicOps<T>): AbstractOpEncoder<T> {
+        fun <V> pickEncoder(descriptor: SerialDescriptor, ops: DynamicOps<V>): AbstractOpEncoder<V> {
             return when (descriptor.kind) {
                 StructureKind.CLASS, StructureKind.MAP, is PrimitiveKind, SerialKind.ENUM -> DynamicObjectEncoder(ops)
                 StructureKind.LIST -> DynamicListEncoder(ops)

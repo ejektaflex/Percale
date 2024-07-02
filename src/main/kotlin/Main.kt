@@ -2,6 +2,7 @@ import com.mojang.serialization.DataResult
 import com.mojang.serialization.DynamicOps
 import com.mojang.serialization.Encoder
 import com.mojang.serialization.JsonOps
+import decoder.AbstractOpDecoder
 import decoder.DynamicObjectDecoder
 import encoder.AbstractOpEncoder
 import kotlinx.serialization.DeserializationStrategy
@@ -33,13 +34,11 @@ fun <U : Any> createEncoderFromSerializer(serializer: SerializationStrategy<U>):
 }
 
 // ### Decoding ###
+
 @OptIn(ExperimentalSerializationApi::class)
 fun <T, U : Any> decodeWithDynamicOps(serializer: DeserializationStrategy<U>, obj: T, ops: DynamicOps<T>): U {
     println("Picking kind: ${serializer.descriptor.kind}")
-    val decoder = when (serializer.descriptor.kind) {
-        //StructureKind.LIST -> DynamicListDecoder(ops)
-        else -> DynamicObjectDecoder(ops, obj)
-    }
+    val decoder = AbstractOpDecoder.pickDecoder(serializer.descriptor, ops, obj)
     return serializer.deserialize(decoder)
 }
 

@@ -18,38 +18,41 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
 
     override val serializersModule = EmptySerializersModule()
 
-    val inputMap = ops.getMap(input).orThrow
+    val inputMap = ops.getMap(input).result().orElseThrow()
+    var currentIndex = 0
+    val mapKeys = inputMap.entries().map { entry -> entry.first }.toList()
 
-    // To handle current tag (field name) context
-    private var currentTag: String = ""
+    val currentKey: T
+        get() = mapKeys[currentIndex]
+
+    val currentValue: T
+        get() = inputMap[currentKey]!!
+
 
     private val mapBuilder = mutableMapOf<String, T>()
-    private val nestedDecoders = mutableMapOf<String, AbstractOpDecoder<T>>()
+    private val nestedDecoders = mutableMapOf<T, AbstractOpDecoder<T>>()
 
-    private var shortCircuitKey = false
+    //private var shortCircuitKey = false
 
     override fun decodeSequentially(): Boolean {
         return true
     }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
-        println("Beginning Structure: $descriptor for key: $currentTag - (${descriptor.kind})")
-        // Root encoder will have no tag name
-        if (currentTag == "") {
+        println("Beginning Structure: $descriptor for key: $currentKey - (${descriptor.kind})")
+        // Root decoder will have no tag name
+        if (currentKey == "") {
+            println("Is root decoder")
             return this
         }
-        val nestedDecoder: AbstractOpDecoder<T> = when (descriptor.kind) {
-            is StructureKind.CLASS, is StructureKind.MAP -> DynamicObjectDecoder(ops, input)
-            //is StructureKind.LIST -> DynamicListEncoder(ops)
-            else -> throw Exception("What encoder do we use for this?: ${descriptor.kind} - $descriptor")
-        }
+        val nestedDecoder = pickDecoder(descriptor, ops, input)
         println("Was not root encoder, using based on ${descriptor.kind}")
-        nestedDecoders[currentTag] = nestedDecoder
+        nestedDecoders[currentKey] = nestedDecoder
         return nestedDecoder
     }
 
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int {
-        return CompositeDecoder.UNKNOWN_NAME
+        return if (currentIndex < mapKeys.size) currentIndex++ else CompositeDecoder.DECODE_DONE
     }
 
     override fun endStructure(descriptor: SerialDescriptor) {
@@ -63,15 +66,15 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
     }
 
     override fun decodeString(): String {
-        return ops.getStringValue(input).orThrow
+        return ops.getStringValue(currentValue).orThrow
     }
 
     override fun decodeInt(): Int {
-        return ops.getNumberValue(input).orThrow.toInt()
+        return ops.getNumberValue(currentValue).orThrow.toInt()
     }
 
     override fun decodeBoolean(): Boolean {
-        return ops.getBooleanValue(input).orThrow
+        return ops.getBooleanValue(currentValue).orThrow
     }
 
     override fun push(result: T) {
