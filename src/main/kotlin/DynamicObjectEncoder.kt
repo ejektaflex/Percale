@@ -4,17 +4,25 @@ import AbstractOpEncoder
 import com.mojang.serialization.DynamicOps
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
-import kotlinx.serialization.descriptors.capturedKClass
-import kotlinx.serialization.encoding.AbstractEncoder
 import kotlinx.serialization.encoding.CompositeEncoder
-import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.modules.EmptySerializersModule
 
 @OptIn(ExperimentalSerializationApi::class)
-class DynamicObjectEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncoder<T>() {
+class DynamicObjectEncoder<T>(override val ops: DynamicOps<T>) : AbstractOpEncoder<T>(ops) {
+
+    override fun encodeFunc(func: () -> T) {
+        if (shortCircuitKey) {
+            throw SerializationException("Currently, only strings can be map keys!")
+        } else {
+            push(func())
+        }
+    }
+
+    override fun push(result: T) {
+        mapBuilder[currentTag] = result
+    }
 
     // To handle current tag (field name) context
     private var currentTag: String = ""
@@ -52,40 +60,13 @@ class DynamicObjectEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncode
         }
     }
 
+    // We are okay with shortCircuitKey here since we want to encode map keys
     override fun encodeString(value: String) {
         if (shortCircuitKey) {
             currentTag = value
         } else {
-            mapBuilder[currentTag] = ops.createString(value)
+            push(ops.createString(value))
         }
-    }
-
-    override fun encodeInt(value: Int) {
-        if (shortCircuitKey) {
-            throw SerializationException("Currently, only strings can be map keys!")
-        } else {
-            mapBuilder[currentTag] = ops.createInt(value)
-        }
-    }
-
-    override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
-        mapBuilder[currentTag] = ops.createString(enumDescriptor.getElementName(index))
-    }
-
-    override fun encodeBoolean(value: Boolean) {
-        mapBuilder[currentTag] = ops.createBoolean(value)
-    }
-
-    override fun encodeDouble(value: Double) {
-        mapBuilder[currentTag] = ops.createDouble(value)
-    }
-
-    override fun encodeFloat(value: Float) {
-        mapBuilder[currentTag] = ops.createFloat(value)
-    }
-
-    override fun encodeLong(value: Long) {
-        mapBuilder[currentTag] = ops.createLong(value)
     }
 
     override fun getResult(): T {

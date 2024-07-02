@@ -12,7 +12,15 @@ import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.modules.EmptySerializersModule
 
 @OptIn(ExperimentalSerializationApi::class)
-class DynamicArrayEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncoder<T>() {
+class DynamicArrayEncoder<T>(override val ops: DynamicOps<T>) : AbstractOpEncoder<T>(ops) {
+
+    override fun encodeFunc(func: () -> T) {
+        push(func())
+    }
+
+    override fun push(result: T) {
+        listBuilder.add(result)
+    }
 
     private var lastIndex = -1
     private var currentIndex = -1
@@ -40,30 +48,6 @@ class DynamicArrayEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncoder
         for (nestedEncoder in nestedEncoders) {
             listBuilder.add(nestedEncoder.getResult())
         }
-    }
-
-    override fun encodeString(value: String) {
-        listBuilder.add(ops.createString(value))
-    }
-
-    override fun encodeInt(value: Int) {
-        listBuilder.add(ops.createInt(value))
-    }
-
-    override fun encodeBoolean(value: Boolean) {
-        listBuilder.add(ops.createBoolean(value))
-    }
-
-    override fun encodeDouble(value: Double) {
-        listBuilder.add(ops.createDouble(value))
-    }
-
-    override fun encodeFloat(value: Float) {
-        listBuilder.add(ops.createFloat(value))
-    }
-
-    override fun encodeLong(value: Long) {
-        listBuilder.add(ops.createLong(value))
     }
 
     override fun getResult(): T {

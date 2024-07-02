@@ -7,6 +7,8 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.StructureKind
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.serializer
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -27,4 +29,10 @@ inline fun <T, reified U : Any> DynamicOps<T>.serialize(obj: U): T? {
 fun main() {
     val result = JsonOps.INSTANCE.serialize(true)
     println("Encoded Data: $result")
+
+
+    Json.encodeToJsonElement(Person("Bob"))
+
+    JsonOps.INSTANCE.serialize(Person("Bob"))
+
 }
