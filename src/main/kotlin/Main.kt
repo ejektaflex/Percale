@@ -26,8 +26,14 @@ inline fun <T, reified U : Any> DynamicOps<T>.serialize(obj: U): T? {
 
 fun main() {
     val result = JsonOps.INSTANCE.serialize(mapOf(
-        "dog" to "Sammy",
-        "cat" to "Nancy"
+        "hello" to mapOf(
+            "a" to 1,
+            "b" to 2,
+        ),
+        "goodbye" to mapOf(
+            "c" to 3,
+            "d" to 4
+        )
     ))
     println("Encoded Data: $result")
 }

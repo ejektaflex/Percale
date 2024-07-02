@@ -3,6 +3,7 @@ package io.ejekta.kambrikx.serial
 import AbstractOpEncoder
 import com.mojang.serialization.DynamicOps
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
@@ -33,12 +34,12 @@ class DynamicObjectEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncode
         val nestedEncoder: AbstractOpEncoder<T> = when (descriptor.kind) {
             is StructureKind.CLASS -> DynamicObjectEncoder(ops)
             is StructureKind.LIST -> DynamicArrayEncoder(ops)
+            is StructureKind.MAP -> DynamicObjectEncoder(ops)
             else -> throw Exception("What encoder do we use for this?: ${descriptor.kind} - $descriptor")
         }
         nestedEncoders[currentTag] = nestedEncoder
         return nestedEncoder
     }
-
 
     override fun endStructure(descriptor: SerialDescriptor) {
         println("Ending Structure: $descriptor")
@@ -59,7 +60,11 @@ class DynamicObjectEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncode
     }
 
     override fun encodeInt(value: Int) {
-        mapBuilder[currentTag] = ops.createInt(value)
+        if (shortCircuitKey) {
+            throw SerializationException("Currently, only strings can be map keys!")
+        } else {
+            mapBuilder[currentTag] = ops.createInt(value)
+        }
     }
 
     override fun encodeBoolean(value: Boolean) {

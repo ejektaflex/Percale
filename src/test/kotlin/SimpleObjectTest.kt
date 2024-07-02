@@ -34,6 +34,25 @@ class SimpleObjectTest {
         }
     }
 
+    // A 2d map object of primitives
+    @Test fun testEncode2dMap() {
+        val result = ops.serialize(mapOf(
+            "hello" to mapOf(
+                "a" to 1,
+                "b" to 2,
+            ),
+            "goodbye" to mapOf(
+                "c" to 3,
+                "d" to 4
+            )
+        ))
+        expectThat(result.toString()) {
+            isEqualTo("""
+                {"hello":{"a":1,"b":2},"goodbye":{"c":3,"d":4}}
+            """.trimIndent())
+        }
+    }
+
     // Objects consisting of other objects
     @Test fun testEncodePersonGroup() {
         val result = ops.serialize(TestData.PersonGroup(jimothy, alice))
