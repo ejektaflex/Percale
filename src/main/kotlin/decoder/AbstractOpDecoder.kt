@@ -16,7 +16,6 @@ import kotlinx.serialization.encoding.AbstractEncoder
 @OptIn(ExperimentalSerializationApi::class)
 abstract class AbstractOpDecoder<T>(open val ops: DynamicOps<T>) : AbstractDecoder() {
     abstract fun decodeFunc(func: () -> T)
-    abstract fun push(result: T)
 
     companion object {
         fun <V> pickDecoder(descriptor: SerialDescriptor, ops: DynamicOps<V>, input: V): AbstractOpDecoder<V> {

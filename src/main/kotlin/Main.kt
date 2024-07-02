@@ -1,9 +1,9 @@
+import com.google.gson.JsonElement
 import com.mojang.serialization.DataResult
 import com.mojang.serialization.DynamicOps
 import com.mojang.serialization.Encoder
 import com.mojang.serialization.JsonOps
 import decoder.AbstractOpDecoder
-import decoder.DynamicObjectDecoder
 import encoder.AbstractOpEncoder
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -24,10 +24,10 @@ inline fun <T, reified U : Any> DynamicOps<T>.serialize(obj: U): T? {
     return encodeWithDynamicOps(serializer<U>(), obj, this)
 }
 
-fun <U : Any> createEncoderFromSerializer(serializer: SerializationStrategy<U>): Encoder<U> {
+fun <U : Any> SerializationStrategy<U>.toEncoder(): Encoder<U> {
     return object : Encoder<U> {
         override fun <T : Any> encode(input: U, ops: DynamicOps<T>, prefix: T): DataResult<T> {
-            val result = encodeWithDynamicOps(serializer, input, ops)!!
+            val result = encodeWithDynamicOps(this@toEncoder, input, ops)!!
             return DataResult.success(result)
         }
     }
@@ -42,7 +42,7 @@ fun <T, U : Any> decodeWithDynamicOps(serializer: DeserializationStrategy<U>, ob
     return serializer.deserialize(decoder)
 }
 
-inline fun <T, reified U : Any> DynamicOps<T>.deserialize(obj: T): U {
+inline fun <T, reified U : Any> DynamicOps<in T>.deserialize(obj: T): U {
     return decodeWithDynamicOps(serializer<U>(), obj, this)
 }
 
@@ -56,7 +56,7 @@ fun main() {
 
     println("\n\n### DECODING NOW! ###\n\n")
 
-    val bobDecoded = decodeWithDynamicOps(Person.serializer(), bobEncoded!!, JsonOps.INSTANCE)
+    val bobDecoded = JsonOps.INSTANCE.deserialize<JsonElement, Person>(bobEncoded!!)
 
     println("Decoded Data: $bobDecoded")
 

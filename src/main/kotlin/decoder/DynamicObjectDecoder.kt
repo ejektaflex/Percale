@@ -12,24 +12,26 @@ import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
+import kotlin.jvm.optionals.getOrNull
 
 @OptIn(ExperimentalSerializationApi::class)
 class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input: T) : AbstractOpDecoder<T>(ops) {
 
     override val serializersModule = EmptySerializersModule()
 
-    val inputMap = ops.getMap(input).result().orElseThrow()
-    var currentIndex = 0
-    val mapKeys = inputMap.entries().map { entry -> entry.first }.toList()
+    private val inputMap = ops.getMap(input).result().getOrNull()
+    private var currentIndex = 0
+    private val mapKeys = inputMap?.entries()?.map { entry -> entry.first }?.toList() ?: emptyList()
 
-    val currentKey: T
+    private val currentKey: T
         get() = mapKeys[currentIndex]
 
-    val currentValue: T
-        get() = inputMap[currentKey]!!
+    // If inputMap is null, then it was not a map and thus is a primitive
+    private val currentValue: T
+        get() {
+            return inputMap?.get(currentKey) ?: input
+        }
 
-
-    private val mapBuilder = mutableMapOf<String, T>()
     private val nestedDecoders = mutableMapOf<T, AbstractOpDecoder<T>>()
 
     //private var shortCircuitKey = false
@@ -77,8 +79,20 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
         return ops.getBooleanValue(currentValue).orThrow
     }
 
-    override fun push(result: T) {
-        TODO("Not yet implemented")
+    override fun decodeLong(): Long {
+        return ops.getNumberValue(currentValue).orThrow.toLong()
+    }
+
+    override fun decodeFloat(): Float {
+        return ops.getNumberValue(currentValue).orThrow.toFloat()
+    }
+
+    override fun decodeDouble(): Double {
+        return ops.getNumberValue(currentValue).orThrow.toDouble()
+    }
+
+    override fun decodeEnum(enumDescriptor: SerialDescriptor): Int {
+        return enumDescriptor.getElementIndex(ops.getStringValue(currentValue).orThrow)
     }
 
     override fun decodeFunc(func: () -> T) {
