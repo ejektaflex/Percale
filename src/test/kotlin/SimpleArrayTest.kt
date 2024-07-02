@@ -1,5 +1,4 @@
 import com.mojang.serialization.JsonOps
-import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
@@ -11,7 +10,7 @@ class SimpleArrayTest {
     val ops = JsonOps.INSTANCE
 
     // Array consisting of primitives
-    @Test fun testSimpleArray() {
+    @Test fun testEncodeSimpleArray() {
         val result = ops.serialize(listOf(jimothy, alice))
         expectThat(result.toString()) {
             isEqualTo("""
@@ -21,7 +20,7 @@ class SimpleArrayTest {
     }
 
     // Array consisting of arrays of primitives
-    @Test fun test2dArray() {
+    @Test fun testEncode2dArray() {
         val result = ops.serialize(listOf(
             listOf(99, 98, 97),
             listOf(69, 68, 67),

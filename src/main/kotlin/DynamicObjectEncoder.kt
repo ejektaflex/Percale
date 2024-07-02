@@ -8,6 +8,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.encoding.AbstractEncoder
 import kotlinx.serialization.encoding.CompositeEncoder
+import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.modules.EmptySerializersModule
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -18,6 +19,8 @@ class DynamicObjectEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncode
 
     private val mapBuilder = mutableMapOf<String, T>()
     private val nestedEncoders = mutableMapOf<String, AbstractOpEncoder<T>>()
+
+    private var shortCircuitKey = false
 
     override val serializersModule = EmptySerializersModule()
 
@@ -48,7 +51,11 @@ class DynamicObjectEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncode
     }
 
     override fun encodeString(value: String) {
-        mapBuilder[currentTag] = ops.createString(value)
+        if (shortCircuitKey) {
+            currentTag = value
+        } else {
+            mapBuilder[currentTag] = ops.createString(value)
+        }
     }
 
     override fun encodeInt(value: Int) {
@@ -68,6 +75,10 @@ class DynamicObjectEncoder<T>(private val ops: DynamicOps<T>) : AbstractOpEncode
     }
 
     override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {
+        if (descriptor.kind == StructureKind.MAP) {
+            shortCircuitKey = (index % 2 == 0) // Every even index will short circuit key
+            return true
+        }
         currentTag = descriptor.getElementName(index)
         return true
     }

@@ -11,6 +11,7 @@ import kotlinx.serialization.serializer
 
 @OptIn(ExperimentalSerializationApi::class)
 fun <T, U : Any> serializeWithDynamicOps(serializer: KSerializer<U>, obj: U, ops: DynamicOps<T>): T? {
+    println("Picking kind: ${serializer.descriptor.kind}")
     val encoder = when (serializer.descriptor.kind) {
         StructureKind.LIST -> DynamicArrayEncoder(ops)
         else -> DynamicObjectEncoder(ops)
@@ -24,14 +25,9 @@ inline fun <T, reified U : Any> DynamicOps<T>.serialize(obj: U): T? {
 }
 
 fun main() {
-    val data = mutableListOf(
-        listOf(1, 2, 3),
-        listOf(4, 5, 6),
-        listOf(7, 8, 9)
-    )
-    val data2 = mutableListOf(
-        1, 2, 3
-    )
-    val encodedData = JsonOps.INSTANCE.serialize(data)
-    println("Encoded Data: $encodedData")
+    val result = JsonOps.INSTANCE.serialize(mapOf(
+        "dog" to "Sammy",
+        "cat" to "Nancy"
+    ))
+    println("Encoded Data: $result")
 }
