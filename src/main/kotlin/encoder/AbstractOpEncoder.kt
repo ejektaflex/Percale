@@ -40,7 +40,7 @@ abstract class AbstractOpEncoder<T>(open val ops: DynamicOps<T>) : AbstractEncod
     }
 
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
-        encodeFunc { ops.createString(enumDescriptor.getElementName(index)) }
+        encodeString(enumDescriptor.getElementName(index))
     }
 
     companion object {

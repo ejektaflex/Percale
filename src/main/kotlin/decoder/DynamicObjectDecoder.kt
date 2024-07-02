@@ -32,7 +32,7 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
 
     private val nestedDecoders = mutableMapOf<T, AbstractOpDecoder<T>>()
 
-    //private var shortCircuitKey = false
+    private var shortCircuitKey = false
 
     override fun decodeSequentially(): Boolean {
         return false
@@ -42,6 +42,8 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
         // Assign keys to iterate over based on descriptor element order
         mapKeys = (0..<descriptor.elementsCount).map { descriptor.getElementName(it) }
         println("Beginning Structure: $descriptor (${descriptor.kind}) with start key: $currentKey - $currentIndex")
+        println("Mapkeys are: $mapKeys")
+        println("MapInput is: $inputMap")
         // Root decoder will have no tag name
         return this
 //        val nestedDecoder = pickDecoder(descriptor, ops, currentValue)

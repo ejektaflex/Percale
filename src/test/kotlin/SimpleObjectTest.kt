@@ -51,6 +51,18 @@ class SimpleObjectTest {
         }
     }
 
+    @Test fun testDecodeSimpleMap() {
+        val result = ops.deserialize<JsonElement, Map<String, Int>>(JsonParser.parseString("""
+            {"dog":33,"cat":32,"emu":31,"hat":30}
+        """.trimIndent()))
+        expectThat(result).isEqualTo(mapOf(
+            "dog" to 33,
+            "cat" to 32,
+            "emu" to 31,
+            "hat" to 30
+        ))
+    }
+
     // A 2d map object of primitives
     @Test fun testEncode2dMap() {
         val result = ops.serialize(mapOf(

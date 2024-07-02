@@ -21,7 +21,8 @@ abstract class AbstractOpDecoder<T>(open val ops: DynamicOps<T>) : AbstractDecod
     companion object {
         fun <V> pickDecoder(descriptor: SerialDescriptor, ops: DynamicOps<V>, input: V): AbstractOpDecoder<V> {
             return when (descriptor.kind) {
-                StructureKind.CLASS, StructureKind.MAP, is PrimitiveKind, SerialKind.ENUM -> DynamicObjectDecoder(ops, input)
+                StructureKind.CLASS, is PrimitiveKind, SerialKind.ENUM -> DynamicObjectDecoder(ops, input)
+                StructureKind.MAP -> DynamicMapDecoder(ops, input)
                 //StructureKind.LIST -> DynamicListEncoder(ops)
                 else -> throw SerializationException("Unsupported descriptor type for our DynamicOps encoder: ${descriptor.kind}, ${descriptor.kind::class}")
             }
