@@ -2,21 +2,11 @@ package pass
 
 import com.mojang.serialization.DataResult
 import com.mojang.serialization.DynamicOps
-import kotlinx.serialization.DeserializationStrategy
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.CompositeDecoder
-import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.modules.EmptySerializersModule
-import kotlin.jvm.optionals.getOrNull
 
-@OptIn(ExperimentalSerializationApi::class)
 class PassMapDecoder<T>(override val ops: DynamicOps<T>, private val input: T, level: Int) : PassDecoder<T>(ops, level) {
-
-    init {
-        debug("CREATED OBJ DECODER WITH IN: $input")
-    }
 
     override val serializersModule = EmptySerializersModule()
 
@@ -33,22 +23,10 @@ class PassMapDecoder<T>(override val ops: DynamicOps<T>, private val input: T, l
         }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
-        debug("Beginning structure ### $descriptor ### - at $currentIndex for kind: ${descriptor.kind} and input $input")
-        debug("Input keys for $input are: $entries")
-
-        // Nested decode should be doing a handoff
         if (currentIndex < 0) {
-            debug("Handing off to self decoder")
             return this
         }
-        // Assign keys to iterate over based on descriptor element order
-        //debug("will be decoding: '$currentKey' to '$currentValue'")
-
-        throw Exception("No!") // TODO why don't we ever hit this?
-        //debug("Doing a decoder pick with value: $currentValue")
         val pickedDecoder = pickDecoder(descriptor, ops, currentValue!!, level)
-        //debug("Picked decoder of type ${pickedDecoder::class.simpleName} for structure ${descriptor.kind}")
-
         return pickedDecoder
     }
 

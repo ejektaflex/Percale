@@ -1,121 +1,28 @@
 import com.google.gson.JsonElement
-import com.google.gson.JsonParser
 import com.mojang.serialization.JsonOps
-import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
-import strikt.api.expectThat
-import strikt.assertions.isEqualTo
 
-class SimpleObjectTest {
+class SimpleObjectTest : ValidationTestList<JsonElement>() {
+    override val ops: JsonOps = JsonOps.INSTANCE
 
     val jimothy = TestData.Person("Jimothy", 36)
     val alice = TestData.Person("Alice", 32)
-    val ops = JsonOps.INSTANCE
+    val group = TestData.PersonGroup(jimothy, alice)
 
     // Objects consisting of primitives
+    val simpleObject = TestValidation(jimothy, TestData.Person.serializer(), """{"name":"Jimothy","age":36}""")
+    @Test fun testEncodeSimpleObject() { simpleObject.encode() }
+    @Test fun testDecodeSimpleObject() { simpleObject.decode() }
 
-    @Test fun testEncodeSimpleObject() {
-        val result = ops.serialize(jimothy)
-        expectThat(result.toString()) {
-            isEqualTo("""
-                {"name":"Jimothy","age":36}
-            """.trimIndent())
-        }
-    }
-
-    @Test fun testDecodeSimpleObject() {
-        val result = ops.deserialize<JsonElement, TestData.Person>(JsonParser.parseString("""
-            {"name":"Jimothy","age":36}
-        """.trimIndent()))
-        expectThat(result).isEqualTo(jimothy)
-    }
-
-    @Test fun testDecodeSimpleObjectReversed() {
-        val result = ops.deserialize<JsonElement, TestData.Person>(JsonParser.parseString("""
-            {"age":36,"name":"Jimothy"}
-        """.trimIndent()))
-        expectThat(result).isEqualTo(jimothy)
-    }
-
-    // Just a simple map object
-    @Test fun testEncodeSimpleMap() {
-        val result = ops.serialize(mapOf(
-            "dog" to "Sammy",
-            "cat" to "Nancy",
-            "emu" to "Jimmy"
-        ))
-        expectThat(result.toString()) {
-            isEqualTo("""
-                {"dog":"Sammy","cat":"Nancy","emu":"Jimmy"}
-            """.trimIndent())
-        }
-    }
-
-    @Test fun testDecodeSimpleMap() {
-        val result = ops.deserialize<JsonElement, Map<String, Int>>(JsonParser.parseString("""
-            {"dog":33,"cat":32,"emu":31,"hat":30}
-        """.trimIndent()))
-        expectThat(result).isEqualTo(mapOf(
-            "dog" to 33,
-            "cat" to 32,
-            "emu" to 31,
-            "hat" to 30
-        ))
-    }
-
-    // A 2d map object of primitives
-
-    @Test fun testEncode2dMap() {
-        val result = ops.serialize(mapOf(
-            "hello" to mapOf(
-                "a" to 1,
-                "b" to 2,
-            ),
-            "goodbye" to mapOf(
-                "c" to 3,
-                "d" to 4
-            )
-        ))
-        expectThat(result.toString()) {
-            isEqualTo("""
-                {"hello":{"a":1,"b":2},"goodbye":{"c":3,"d":4}}
-            """.trimIndent())
-        }
-    }
-
-    @Test fun testDecode2dMap() {
-        expectThat(ops.deserialize<JsonElement, Map<String, Map<String, Int>>>(JsonParser.parseString("""
-            {"hello":{"a":1,"b":2},"goodbye":{"c":3,"d":4}}
-        """.trimIndent()))) {
-            isEqualTo(mapOf(
-                "hello" to mapOf(
-                    "a" to 1,
-                    "b" to 2,
-                ),
-                "goodbye" to mapOf(
-                    "c" to 3,
-                    "d" to 4
-                )
-            ))
-        }
-    }
+    // Objects with reversed keys
+    val simpleObjectReversed = TestValidation(jimothy, TestData.Person.serializer(), """{"age":36,"name":"Jimothy"}""")
+    @Test fun testDecodeSimpleObjectReversed() { simpleObjectReversed.decode() }
 
     // Objects consisting of other objects
-    @Test fun testEncodePersonGroup() {
-        val result = ops.serialize(TestData.PersonGroup(jimothy, alice))
-        expectThat(result.toString()) {
-            isEqualTo("""
-                {"personA":{"name":"Jimothy","age":36},"personB":{"name":"Alice","age":32}}
-            """.trimIndent())
-        }
-    }
-
-    @Test fun testDecodePersonGroup() {
-        expectThat(ops.deserialize<JsonElement, TestData.PersonGroup>(JsonParser.parseString("""
+    val personGroup = TestValidation(group, TestData.PersonGroup.serializer(), """
             {"personA":{"name":"Jimothy","age":36},"personB":{"name":"Alice","age":32}}
-        """.trimIndent()))) {
-            isEqualTo(TestData.PersonGroup(jimothy, alice))
-        }
-    }
+        """.trimIndent())
+    @Test fun testEncodePersonGroup() { personGroup.encode() }
+    @Test fun testDecodePersonGroup() { personGroup.decode() }
 
 }

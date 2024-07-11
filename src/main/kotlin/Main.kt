@@ -27,6 +27,10 @@ inline fun <T, reified U : Any> DynamicOps<T>.serialize(obj: U): T? {
     return encodeWithDynamicOps(serializer<U>(), obj, this)
 }
 
+fun <T, U : Any> DynamicOps<T>.serialize(obj: U, serializer: SerializationStrategy<U>): T? {
+    return encodeWithDynamicOps(serializer, obj, this)
+}
+
 fun <U : Any> SerializationStrategy<U>.toEncoder(): Encoder<U> {
     return object : Encoder<U> {
         override fun <T : Any> encode(input: U, ops: DynamicOps<T>, prefix: T): DataResult<T> {
@@ -47,6 +51,10 @@ fun <T, U : Any> decodeWithDynamicOps(serializer: DeserializationStrategy<U>, ob
 
 inline fun <T, reified U : Any> DynamicOps<in T>.deserialize(obj: T): U {
     return passWithDynamicOps(serializer<U>(), obj, this)
+}
+
+fun <T, U : Any> DynamicOps<T>.deserialize(obj: T, serializer: DeserializationStrategy<U>): U {
+    return passWithDynamicOps(serializer, obj, this)
 }
 
 // ### Pass (Testing) Decoder
