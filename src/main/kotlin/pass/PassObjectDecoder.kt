@@ -1,8 +1,7 @@
-package decoder
+package pass
 
 import com.mojang.serialization.DataResult
 import com.mojang.serialization.DynamicOps
-import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.CompositeDecoder
@@ -11,10 +10,10 @@ import kotlinx.serialization.modules.EmptySerializersModule
 import kotlin.jvm.optionals.getOrNull
 
 @OptIn(ExperimentalSerializationApi::class)
-class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input: T) : AbstractOpDecoder<T>(ops) {
+class PassObjectDecoder<T>(override val ops: DynamicOps<T>, private val input: T, level: Int) : PassDecoder<T>(ops, level) {
 
     init {
-        println("CREATED OBJ DECODER WITH IN: $input")
+        debug("CREATED OBJ DECODER WITH IN: $input")
     }
 
     override val serializersModule = EmptySerializersModule()
@@ -22,10 +21,10 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
     private val inputMap = ops.getMap(input).result().getOrNull()
     private var currentIndex = 0
     private var mapKeys = emptyList<String>()
-    private val inputEntries = inputMap!!.entries().toList()
+    private val inputEntries = inputMap?.entries()?.toList() ?: emptyList()
 
     val inputSize: Int by lazy {
-        inputMap!!.entries().toList().size
+        inputEntries.size
     }
 
     private val currentKey: T?
@@ -40,22 +39,22 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
             return inputMap?.get(currentKey)
         }
 
-    private val nestedDecoders = mutableMapOf<Int, AbstractOpDecoder<T>>()
+    private val nestedDecoders = mutableMapOf<Int, PassDecoder<T>>()
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
         // Assign keys to iterate over based on descriptor element order
-        println("Beginning structure $descriptor -  at $currentIndex")
-        println(" * will be decoding: $currentKey")
-        println(" * decoding to: $currentValue")
-        println(descriptor.kind)
+        debug("Beginning structure $descriptor -  at $currentIndex")
+        debug("will be decoding: $currentKey")
+        debug("decoding to: $currentValue")
+        debug(descriptor.kind)
         // Nested decode should be doing a handoff
-        println("MapKeys: $mapKeys")
+        debug("MapKeys: $mapKeys")
         if (currentIndex < 0) {
             mapKeys = (0..<descriptor.elementsCount).map { descriptor.getElementName(it) }
             return this
         }
-        println("Doing a decoder pick")
-        val pickedDecoder = pickDecoder(descriptor, ops, currentValue!!)
+        debug("Doing a decoder pick")
+        val pickedDecoder = pickDecoder(descriptor, ops, currentValue!!, level)
 
 
         pickedDecoder.decodeElementIndex(descriptor.getElementDescriptor(currentIndex))
@@ -67,7 +66,7 @@ class DynamicObjectDecoder<T>(override val ops: DynamicOps<T>, private val input
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int {
         currentIndex += 1
         if (currentIndex >= inputSize) {
-            println("Calling for decode finish!!!!! $descriptor after $currentIndex for input $input")
+            debug("Calling for decode finish!!!!! $descriptor after $currentIndex for input $input")
             return CompositeDecoder.DECODE_DONE
         }
         return currentIndex

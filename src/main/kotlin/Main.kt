@@ -9,6 +9,7 @@ import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.serializer
+import pass.PassDecoder
 
 // ### Encoding ###
 
@@ -46,6 +47,15 @@ inline fun <T, reified U : Any> DynamicOps<in T>.deserialize(obj: T): U {
     return decodeWithDynamicOps(serializer<U>(), obj, this)
 }
 
+// ### Pass (Testing) Decoder
+
+@OptIn(ExperimentalSerializationApi::class)
+fun <T, U : Any> passWithDynamicOps(serializer: DeserializationStrategy<U>, obj: T, ops: DynamicOps<T>): U {
+    println("Picking kind: ${serializer.descriptor.kind}")
+    val decoder = PassDecoder.pickDecoder(serializer.descriptor, ops, obj)
+    return serializer.deserialize(decoder)
+}
+
 fun main() {
     val result = JsonOps.INSTANCE.serialize(true)
     println("Encoded Data: $result")
@@ -56,8 +66,10 @@ fun main() {
 
     println("\n\n### DECODING NOW! ###\n\n")
 
-    val bobDecoded = JsonOps.INSTANCE.deserialize<JsonElement, Person>(bobEncoded!!)
+    //val bobDecoded = JsonOps.INSTANCE.deserialize<JsonElement, Person>(bobEncoded!!)
+    val bobDecoded = passWithDynamicOps(Person.serializer(), bobEncoded!!, JsonOps.INSTANCE)
 
     println("Decoded Data: $bobDecoded")
 
 }
+

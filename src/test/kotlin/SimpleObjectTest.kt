@@ -64,6 +64,7 @@ class SimpleObjectTest {
     }
 
     // A 2d map object of primitives
+
     @Test fun testEncode2dMap() {
         val result = ops.serialize(mapOf(
             "hello" to mapOf(
@@ -82,6 +83,23 @@ class SimpleObjectTest {
         }
     }
 
+    @Test fun testDecode2dMap() {
+        expectThat(ops.deserialize<JsonElement, Map<String, Map<String, Int>>>(JsonParser.parseString("""
+            {"hello":{"a":1,"b":2},"goodbye":{"c":3,"d":4}}
+        """.trimIndent()))) {
+            isEqualTo(mapOf(
+                "hello" to mapOf(
+                    "a" to 1,
+                    "b" to 2,
+                ),
+                "goodbye" to mapOf(
+                    "c" to 3,
+                    "d" to 4
+                )
+            ))
+        }
+    }
+
     // Objects consisting of other objects
     @Test fun testEncodePersonGroup() {
         val result = ops.serialize(TestData.PersonGroup(jimothy, alice))
@@ -89,6 +107,14 @@ class SimpleObjectTest {
             isEqualTo("""
                 {"personA":{"name":"Jimothy","age":36},"personB":{"name":"Alice","age":32}}
             """.trimIndent())
+        }
+    }
+
+    @Test fun testDecodePersonGroup() {
+        expectThat(ops.deserialize<JsonElement, TestData.PersonGroup>(JsonParser.parseString("""
+            {"personA":{"name":"Jimothy","age":36},"personB":{"name":"Alice","age":32}}
+        """.trimIndent()))) {
+            isEqualTo(TestData.PersonGroup(jimothy, alice))
         }
     }
 
