@@ -23,7 +23,6 @@ class PassObjectDecoder<T>(override val ops: DynamicOps<T>, private val input: T
         ops.getMap(input).result().getOrNull()
     private var inputKeys = mutableListOf<String>()
     private var currentIndex = -1
-    private var currentElements = emptyList<String>()
 
     private val currentKey: String?
         get() {
@@ -37,11 +36,8 @@ class PassObjectDecoder<T>(override val ops: DynamicOps<T>, private val input: T
 
     override val currentValue: T?
         get() {
-            debug("I: $input, M: $inputMap K: $currentKey, E: $currentElements, V: ${inputMap?.get(currentKey)}")
             return inputMap?.get(currentKey)
         }
-
-    private val nestedDecoders = mutableMapOf<Int, PassDecoder<T>>()
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
         debug("Beginning structure ### $descriptor ### - at $currentIndex for kind: ${descriptor.kind} and input $input with els ${descriptor.elementsCount}")
@@ -58,45 +54,26 @@ class PassObjectDecoder<T>(override val ops: DynamicOps<T>, private val input: T
         // Assign keys to iterate over based on descriptor element order
         debug("will be decoding: '$currentKey' to '$currentValue'")
 
-        debug("Doing a decoder pick with value: $currentValue")
+        throw Exception("No!") // TODO why don't we ever hit this?
+        //debug("Doing a decoder pick with value: $currentValue")
         val pickedDecoder = pickDecoder(descriptor, ops, currentValue!!, level)
-        debug("Picked decoder of type ${pickedDecoder::class.simpleName} for structure ${descriptor.kind}")
+        //debug("Picked decoder of type ${pickedDecoder::class.simpleName} for structure ${descriptor.kind}")
 
-        //pickedDecoder.decodeElementIndex(descriptor.getElementDescriptor(currentIndex))
-
-        nestedDecoders[currentIndex] = pickedDecoder
         return pickedDecoder
     }
 
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int {
-        // TODO inputKeys should be ordered by descriptors
-
-
-        debug("Indexes: ${(0..<descriptor.elementsCount).map { descriptor.getElementDescriptor(it) }}")
         currentIndex += 1
-        debug("Decoding index $currentIndex")
+        //debug("Decoding index $currentIndex")
         return if (currentIndex < descriptor.elementsCount) currentIndex else CompositeDecoder.DECODE_DONE
     }
 
-    override fun endStructure(descriptor: SerialDescriptor) {
-        debug("Ending Obj Structure: $descriptor with input: $input")
-    }
-
-
-
     override fun <V> decodeFunc(func: () -> DataResult<V>): V {
-        debug("OBJ $input is Decoding $currentIndex - $currentKey - $currentValue")
         val dataResult = func()
         return dataResult.orThrow
     }
 
-    override fun decodeInlineElement(descriptor: SerialDescriptor, index: Int): Decoder {
-        println("Decoding element: $descriptor $index")
-        return super.decodeInlineElement(descriptor, index)
-    }
-
     override fun <T> decodeSerializableValue(deserializer: DeserializationStrategy<T>): T {
-        debug("WHOAD $deserializer")
         return deserializer.deserialize(PassObjectDecoder(ops, currentValue!!, level + 1))
     }
 

@@ -8,6 +8,7 @@ import encoder.AbstractOpEncoder
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationStrategy
+import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.serializer
 import pass.PassDecoder
@@ -72,11 +73,13 @@ fun main() {
 //
 //    println("Decoded Data: $bobDecoded")
 
-    val result = JsonOps.INSTANCE.serialize(
-        5
-    )
+    val result = JsonOps.INSTANCE.serialize(mapOf(
+        "a" to 33,
+        "b" to 32,
+        "c" to 31
+    ))
 
-    val decoded = passWithDynamicOps(Int.serializer(), result!!, JsonOps.INSTANCE)
+    val decoded = passWithDynamicOps(MapSerializer(String.serializer(), Int.serializer()), result!!, JsonOps.INSTANCE)
     println("Decoded Data: $decoded")
 
 }

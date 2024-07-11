@@ -15,7 +15,7 @@ import kotlin.jvm.optionals.getOrNull
 class PassPrimitiveDecoder<T>(override val ops: DynamicOps<T>, private val input: T, level: Int) : PassDecoder<T>(ops, level) {
 
     init {
-        debug("CREATED OBJ DECODER WITH IN: $input")
+        debug("CREATED PRIM DECODER WITH IN: $input")
     }
 
     override val serializersModule = EmptySerializersModule()
