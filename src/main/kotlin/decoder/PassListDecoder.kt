@@ -41,8 +41,4 @@ class PassListDecoder<T>(override val ops: DynamicOps<T>, private val input: T, 
         return dataResult.orThrow
     }
 
-    override fun <T> decodeSerializableValue(deserializer: DeserializationStrategy<T>): T {
-        return deserializer.deserialize(pickDecoder(deserializer.descriptor, ops, currentValue!!, level + 1))
-    }
-
 }

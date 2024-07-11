@@ -1,8 +1,6 @@
 import com.mojang.datafixers.util.Pair
 import com.mojang.serialization.*
-import encoder.AbstractOpEncoder
-import kotlinx.serialization.builtins.MapSerializer
-import kotlinx.serialization.builtins.serializer
+import encoder.PassEncoder
 import decoder.PassDecoder
 import kotlinx.serialization.*
 
@@ -11,7 +9,7 @@ import kotlinx.serialization.*
 @OptIn(ExperimentalSerializationApi::class)
 fun <T, U : Any> encodeWithDynamicOps(serializer: SerializationStrategy<U>, obj: U, ops: DynamicOps<T>): T? {
     println("Picking kind: ${serializer.descriptor.kind}")
-    val encoder = AbstractOpEncoder.pickEncoder(serializer.descriptor, ops)
+    val encoder = PassEncoder.pickEncoder(serializer.descriptor, ops)
     encoder.encodeSerializableValue(serializer, obj)
     return encoder.getResult()
 }

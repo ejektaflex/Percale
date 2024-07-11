@@ -41,17 +41,4 @@ class PassMapDecoder<T>(override val ops: DynamicOps<T>, private val input: T, l
         return dataResult.orThrow
     }
 
-//    override fun <T> decodeSerializableValue(deserializer: DeserializationStrategy<T>): T {
-//        debug("DecSerVal ${deserializer.descriptor} - $currentValue")
-//        return when (deserializer.descriptor.kind) {
-//            is PrimitiveKind -> deserializer.deserialize(PassPrimitiveDecoder(ops, currentValue!!, level + 1))
-//            else -> deserializer.deserialize(PassMapDecoder(ops, currentValue!!, level + 1))
-//        }
-//    }
-
-//    override fun <T> decodeSerializableValue(deserializer: DeserializationStrategy<T>): T {
-//        println("Using: ${deserializer.descriptor}")
-//        return deserializer.deserialize(PassObjectDecoder(ops, currentValue!!, level + 1))
-//    }
-
 }

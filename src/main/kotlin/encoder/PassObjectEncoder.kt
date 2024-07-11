@@ -9,7 +9,7 @@ import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.modules.EmptySerializersModule
 
 @OptIn(ExperimentalSerializationApi::class)
-class DynamicObjectEncoder<T>(override val ops: DynamicOps<T>) : AbstractOpEncoder<T>(ops) {
+class PassObjectEncoder<T>(override val ops: DynamicOps<T>) : PassEncoder<T>(ops) {
 
     override fun encodeFunc(func: () -> T) {
         if (shortCircuitKey) {
@@ -27,7 +27,7 @@ class DynamicObjectEncoder<T>(override val ops: DynamicOps<T>) : AbstractOpEncod
     private var currentTag: String = ""
 
     private val mapBuilder = mutableMapOf<String, T>()
-    private val nestedEncoders = mutableMapOf<String, AbstractOpEncoder<T>>()
+    private val nestedEncoders = mutableMapOf<String, PassEncoder<T>>()
 
     private var shortCircuitKey = false
 

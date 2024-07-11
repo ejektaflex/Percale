@@ -5,7 +5,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.modules.EmptySerializersModule
 
-class DynamicListEncoder<T>(override val ops: DynamicOps<T>) : AbstractOpEncoder<T>(ops) {
+class PassListEncoder<T>(override val ops: DynamicOps<T>) : PassEncoder<T>(ops) {
 
     override fun encodeFunc(func: () -> T) {
         push(func())
@@ -19,7 +19,7 @@ class DynamicListEncoder<T>(override val ops: DynamicOps<T>) : AbstractOpEncoder
     private var currentIndex = -1
 
     private val listBuilder = mutableListOf<T>()
-    private val nestedEncoders = mutableListOf<AbstractOpEncoder<T>>()
+    private val nestedEncoders = mutableListOf<PassEncoder<T>>()
 
     override val serializersModule = EmptySerializersModule()
 

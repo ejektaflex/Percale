@@ -2,6 +2,7 @@ package decoder
 
 import com.mojang.serialization.DataResult
 import com.mojang.serialization.DynamicOps
+import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -16,10 +17,9 @@ abstract class PassDecoder<T>(open val ops: DynamicOps<T>, val level: Int) : Abs
     abstract fun <V> decodeFunc(func: () -> DataResult<V>): V
     abstract val currentValue: T?
 
-    @OptIn(ExperimentalEncodingApi::class)
-    fun debug(item: Any) {
-        println("${" ".repeat(level * 2)}* [${hashCode().toString().drop(3)}] * $item")
-    }
+//    fun debug(item: Any) {
+//        println("${" ".repeat(level * 2)}* [${hashCode().toString().drop(3)}] * $item")
+//    }
 
     override fun decodeString(): String {
         return decodeFunc { ops.getStringValue(currentValue) }
@@ -59,6 +59,10 @@ abstract class PassDecoder<T>(open val ops: DynamicOps<T>, val level: Int) : Abs
 
     override fun decodeSequentially(): Boolean {
         return false
+    }
+
+    override fun <T> decodeSerializableValue(deserializer: DeserializationStrategy<T>): T {
+        return deserializer.deserialize(pickDecoder(deserializer.descriptor, ops, currentValue!!, level + 1))
     }
 
     companion object {
