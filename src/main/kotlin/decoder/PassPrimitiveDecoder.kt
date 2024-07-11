@@ -1,4 +1,4 @@
-package pass
+package decoder
 
 import com.mojang.serialization.DataResult
 import com.mojang.serialization.DynamicOps
@@ -9,7 +9,6 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.modules.EmptySerializersModule
-import kotlin.jvm.optionals.getOrNull
 
 @OptIn(ExperimentalSerializationApi::class)
 class PassPrimitiveDecoder<T>(override val ops: DynamicOps<T>, private val input: T, level: Int) : PassDecoder<T>(ops, level) {

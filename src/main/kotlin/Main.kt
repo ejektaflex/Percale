@@ -1,17 +1,10 @@
-import com.google.gson.JsonElement
-import com.mojang.serialization.DataResult
-import com.mojang.serialization.DynamicOps
-import com.mojang.serialization.Encoder
-import com.mojang.serialization.JsonOps
-import decoder.AbstractOpDecoder
+import com.mojang.datafixers.util.Pair
+import com.mojang.serialization.*
 import encoder.AbstractOpEncoder
-import kotlinx.serialization.DeserializationStrategy
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.serializer
-import pass.PassDecoder
+import decoder.PassDecoder
+import kotlinx.serialization.*
 
 // ### Encoding ###
 
@@ -45,26 +38,44 @@ fun <U : Any> SerializationStrategy<U>.toEncoder(): Encoder<U> {
 @OptIn(ExperimentalSerializationApi::class)
 fun <T, U : Any> decodeWithDynamicOps(serializer: DeserializationStrategy<U>, obj: T, ops: DynamicOps<T>): U {
     println("Picking kind: ${serializer.descriptor.kind}")
-    val decoder = AbstractOpDecoder.pickDecoder(serializer.descriptor, ops, obj)
+    val decoder = PassDecoder.pickDecoder(serializer.descriptor, ops, obj)
     return serializer.deserialize(decoder)
 }
 
 inline fun <T, reified U : Any> DynamicOps<in T>.deserialize(obj: T): U {
-    return passWithDynamicOps(serializer<U>(), obj, this)
+    return decodeWithDynamicOps(serializer<U>(), obj, this)
 }
 
 fun <T, U : Any> DynamicOps<T>.deserialize(obj: T, serializer: DeserializationStrategy<U>): U {
-    return passWithDynamicOps(serializer, obj, this)
+    return decodeWithDynamicOps(serializer, obj, this)
 }
 
-// ### Pass (Testing) Decoder
-
-@OptIn(ExperimentalSerializationApi::class)
-fun <T, U : Any> passWithDynamicOps(serializer: DeserializationStrategy<U>, obj: T, ops: DynamicOps<T>): U {
-    println("Picking kind: ${serializer.descriptor.kind}")
-    val decoder = PassDecoder.pickDecoder(serializer.descriptor, ops, obj)
-    return serializer.deserialize(decoder)
+fun <U : Any> DeserializationStrategy<U>.toDecoder(): Decoder<U> {
+    return object : Decoder<U> {
+        override fun <T : Any?> decode(ops: DynamicOps<T>, input: T): DataResult<Pair<U, T>> {
+            val result = decodeWithDynamicOps(this@toDecoder, input, ops)
+            return DataResult.success(Pair(result, ops.empty()))
+        }
+    }
 }
+
+// ### Codec
+
+fun <U : Any> KSerializer<U>.toCodec(): Codec<U> {
+    return object : Codec<U> {
+        override fun <T : Any> encode(input: U, ops: DynamicOps<T>, prefix: T): DataResult<T> {
+            val result = encodeWithDynamicOps(this@toCodec, input, ops)!!
+            return DataResult.success(result)
+        }
+
+        override fun <T : Any?> decode(ops: DynamicOps<T>, input: T): DataResult<Pair<U, T>> {
+            val result = decodeWithDynamicOps(this@toCodec, input, ops)
+            return DataResult.success(Pair(result, ops.empty()))
+        }
+    }
+}
+
+
 
 fun main() {
 //    val result = JsonOps.INSTANCE.serialize(true)
@@ -81,14 +92,21 @@ fun main() {
 //
 //    println("Decoded Data: $bobDecoded")
 
-    val result = JsonOps.INSTANCE.serialize(mapOf(
-        "a" to 33,
-        "b" to 32,
-        "c" to 31
-    ))
+    val jimothy = Person("Jimothy", 36)
 
-    val decoded = passWithDynamicOps(MapSerializer(String.serializer(), Int.serializer()), result!!, JsonOps.INSTANCE)
-    println("Decoded Data: $decoded")
+    println("PeaceTest: ${JsonOps.INSTANCE.serialize(jimothy)}")
+
+    val personCodec = Person.serializer().toCodec()
+
+    val result = personCodec.encodeStart(JsonOps.INSTANCE, jimothy).result().get()
+
+    println(result)
+
+    println("Now decoding...")
+
+    val decoded = personCodec.decode(JsonOps.INSTANCE, result).result().get().first
+
+    println(decoded)
 
 }
 

@@ -1,4 +1,4 @@
-package pass
+package decoder
 
 import com.mojang.serialization.DataResult
 import com.mojang.serialization.DynamicOps
