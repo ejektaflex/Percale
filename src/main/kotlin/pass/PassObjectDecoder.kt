@@ -20,21 +20,21 @@ class PassObjectDecoder<T>(override val ops: DynamicOps<T>, private val input: T
     override val serializersModule = EmptySerializersModule()
 
     private var inputMap =
-        ops.getMap(input).result().getOrNull()?.entries()?.toList()?.associate { it.first to it.second }
-    private var inputKeys = inputMap?.keys?.toList() ?: emptyList()
+        ops.getMap(input).result().getOrNull()
+    private var inputKeys = mutableListOf<String>()
     private var currentIndex = -1
     private var currentElements = emptyList<String>()
 
-    private val currentKey: T?
+    private val currentKey: String?
         get() {
+            // If no input keys, is not a map and is just primitive input
             return if (inputKeys.isEmpty()) {
-                input
+                null
             } else {
                 inputKeys[currentIndex]
             }
         }
 
-    // If inputMap is null, then it was not a map and thus is a primitive
     override val currentValue: T?
         get() {
             debug("I: $input, M: $inputMap K: $currentKey, E: $currentElements, V: ${inputMap?.get(currentKey)}")
@@ -45,6 +45,8 @@ class PassObjectDecoder<T>(override val ops: DynamicOps<T>, private val input: T
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
         debug("Beginning structure $descriptor -  at $currentIndex for kind: ${descriptor.kind} and input $input with els ${descriptor.elementsCount}")
+
+        inputKeys = (0..<descriptor.elementsCount).map { descriptor.getElementName(it) }.toMutableList()
 
         // Nested decode should be doing a handoff
         if (currentIndex < 0) {
@@ -65,17 +67,12 @@ class PassObjectDecoder<T>(override val ops: DynamicOps<T>, private val input: T
     }
 
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int {
-//        debug("EL: ${descriptor.elementsCount}, KI: ${descriptor.getElementDescriptor(currentIndex).kind}")
-//        currentElements = (0..<descriptor.elementsCount).map { descriptor.getElementName(it) }
-//        if (currentIndex >= descriptor.elementsCount) {
-//            debug("DECODE FINISH!! $descriptor after $currentIndex for input $input")
-//            return CompositeDecoder.DECODE_DONE
-//        }
-//        currentIndex += 1
-//        debug("Decoding index $currentIndex to $currentKey and val $currentValue for kind above")
-//        return currentIndex
+        // TODO inputKeys should be ordered by descriptors
+
+
+        debug("Indexes: ${(0..<descriptor.elementsCount).map { descriptor.getElementDescriptor(it) }}")
         currentIndex += 1
-        debug("Decoding index $currentIndex}")
+        debug("Decoding index $currentIndex")
         return if (currentIndex < descriptor.elementsCount) currentIndex else CompositeDecoder.DECODE_DONE
     }
 

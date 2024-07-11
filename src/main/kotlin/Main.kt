@@ -44,7 +44,7 @@ fun <T, U : Any> decodeWithDynamicOps(serializer: DeserializationStrategy<U>, ob
 }
 
 inline fun <T, reified U : Any> DynamicOps<in T>.deserialize(obj: T): U {
-    return decodeWithDynamicOps(serializer<U>(), obj, this)
+    return passWithDynamicOps(serializer<U>(), obj, this)
 }
 
 // ### Pass (Testing) Decoder
