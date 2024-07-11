@@ -9,14 +9,17 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.encoding.AbstractDecoder
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 @OptIn(ExperimentalSerializationApi::class)
 abstract class PassDecoder<T>(open val ops: DynamicOps<T>, val level: Int) : AbstractDecoder() {
     abstract fun <V> decodeFunc(func: () -> DataResult<V>): V
     abstract val currentValue: T?
 
+    @OptIn(ExperimentalEncodingApi::class)
     fun debug(item: Any) {
-        println("${" ".repeat(level * 2)}* $item")
+        println("${" ".repeat(level * 2)}* [${hashCode().toString().drop(3)}] * $item")
     }
 
     override fun decodeString(): String {
