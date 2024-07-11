@@ -67,7 +67,7 @@ abstract class PassDecoder<T>(open val ops: DynamicOps<T>, val level: Int) : Abs
                 StructureKind.CLASS -> PassObjectDecoder(ops, input, level + 1)
                 is PrimitiveKind, SerialKind.ENUM -> PassPrimitiveDecoder(ops, input, level + 1)
                 StructureKind.MAP -> PassMapDecoder(ops, input, level + 1)
-                //StructureKind.LIST -> DynamicListEncoder(ops)
+                StructureKind.LIST -> PassListDecoder(ops, input, level + 1)
                 else -> throw SerializationException("Unsupported descriptor type for our DynamicOps encoder: ${descriptor.kind}, ${descriptor.kind::class}")
             }
         }
