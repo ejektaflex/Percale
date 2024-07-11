@@ -1,4 +1,4 @@
-package decoder
+package percale.decoder
 
 import com.mojang.serialization.DataResult
 import com.mojang.serialization.DynamicOps

@@ -1,14 +1,13 @@
 import com.mojang.datafixers.util.Pair
 import com.mojang.serialization.*
-import encoder.PassEncoder
-import decoder.PassDecoder
+import percale.encoder.PassEncoder
+import percale.decoder.PassDecoder
 import kotlinx.serialization.*
 
 // ### Encoding ###
 
 @OptIn(ExperimentalSerializationApi::class)
 fun <T, U : Any> encodeWithDynamicOps(serializer: SerializationStrategy<U>, obj: U, ops: DynamicOps<T>): T? {
-    println("Picking kind: ${serializer.descriptor.kind}")
     val encoder = PassEncoder.pickEncoder(serializer.descriptor, ops)
     encoder.encodeSerializableValue(serializer, obj)
     return encoder.getResult()
@@ -35,7 +34,6 @@ fun <U : Any> SerializationStrategy<U>.toEncoder(): Encoder<U> {
 
 @OptIn(ExperimentalSerializationApi::class)
 fun <T, U : Any> decodeWithDynamicOps(serializer: DeserializationStrategy<U>, obj: T, ops: DynamicOps<T>): U {
-    println("Picking kind: ${serializer.descriptor.kind}")
     val decoder = PassDecoder.pickDecoder(serializer.descriptor, ops, obj)
     return serializer.deserialize(decoder)
 }

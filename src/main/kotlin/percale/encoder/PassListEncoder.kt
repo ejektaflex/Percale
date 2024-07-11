@@ -1,4 +1,4 @@
-package encoder
+package percale.encoder
 
 import com.mojang.serialization.DynamicOps
 import kotlinx.serialization.descriptors.SerialDescriptor

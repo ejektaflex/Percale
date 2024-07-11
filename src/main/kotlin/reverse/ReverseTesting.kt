@@ -2,7 +2,7 @@ package reverse
 
 import com.mojang.serialization.Codec
 import com.mojang.serialization.DynamicOps
-import decoder.PassDecoder
+import percale.decoder.PassDecoder
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializer
