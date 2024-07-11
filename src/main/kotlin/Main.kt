@@ -57,19 +57,26 @@ fun <T, U : Any> passWithDynamicOps(serializer: DeserializationStrategy<U>, obj:
 }
 
 fun main() {
-    val result = JsonOps.INSTANCE.serialize(true)
-    println("Encoded Data: $result")
+//    val result = JsonOps.INSTANCE.serialize(true)
+//    println("Encoded Data: $result")
+//
+//    val bob = Person("Bob")
+//
+//    val bobEncoded = JsonOps.INSTANCE.serialize(bob)
+//
+//    println("\n\n### DECODING NOW! ###\n\n")
+//
+//    //val bobDecoded = JsonOps.INSTANCE.deserialize<JsonElement, Person>(bobEncoded!!)
+//    val bobDecoded = passWithDynamicOps(Person.serializer(), bobEncoded!!, JsonOps.INSTANCE)
+//
+//    println("Decoded Data: $bobDecoded")
 
-    val bob = Person("Bob")
+    val result = JsonOps.INSTANCE.serialize(Worker(
+        Person("Bob"), false
+    ))
 
-    val bobEncoded = JsonOps.INSTANCE.serialize(bob)
-
-    println("\n\n### DECODING NOW! ###\n\n")
-
-    //val bobDecoded = JsonOps.INSTANCE.deserialize<JsonElement, Person>(bobEncoded!!)
-    val bobDecoded = passWithDynamicOps(Person.serializer(), bobEncoded!!, JsonOps.INSTANCE)
-
-    println("Decoded Data: $bobDecoded")
+    val decoded = passWithDynamicOps(Worker.serializer(), result!!, JsonOps.INSTANCE)
+    println("Decoded Data: $decoded")
 
 }
 

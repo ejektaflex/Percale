@@ -17,3 +17,6 @@ data class Vehicle(val passengers: List<Person>)
 
 @Serializable
 open class Dog(val name: String, val breed: String)
+
+@Serializable
+data class Worker(val person: Person, val isBoss: Boolean)

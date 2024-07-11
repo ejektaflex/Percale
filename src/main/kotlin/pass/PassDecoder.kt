@@ -63,7 +63,7 @@ abstract class PassDecoder<T>(open val ops: DynamicOps<T>, val level: Int) : Abs
     }
 
     companion object {
-        fun <V> pickDecoder(descriptor: SerialDescriptor, ops: DynamicOps<V>, input: V, level: Int = -1): PassDecoder<V> {
+        fun <V> pickDecoder(descriptor: SerialDescriptor, ops: DynamicOps<V>, input: V, level: Int = 0): PassDecoder<V> {
             return when (descriptor.kind) {
                 StructureKind.CLASS, is PrimitiveKind, SerialKind.ENUM -> PassObjectDecoder(ops, input, level + 1)
                 //StructureKind.MAP -> DynamicMapDecoder(ops, input)

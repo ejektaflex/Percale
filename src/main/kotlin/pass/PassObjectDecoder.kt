@@ -44,19 +44,21 @@ class PassObjectDecoder<T>(override val ops: DynamicOps<T>, private val input: T
     private val nestedDecoders = mutableMapOf<Int, PassDecoder<T>>()
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
-        debug("Beginning structure $descriptor -  at $currentIndex for kind: ${descriptor.kind} and input $input with els ${descriptor.elementsCount}")
+        debug("Beginning structure ### $descriptor ### - at $currentIndex for kind: ${descriptor.kind} and input $input with els ${descriptor.elementsCount}")
 
         inputKeys = (0..<descriptor.elementsCount).map { descriptor.getElementName(it) }.toMutableList()
 
+        debug("Input keys for $input are: $inputKeys")
+
         // Nested decode should be doing a handoff
         if (currentIndex < 0) {
-            debug("Handing off to nested decoder")
+            debug("Handing off to self decoder")
             return this
         }
         // Assign keys to iterate over based on descriptor element order
         debug("will be decoding: '$currentKey' to '$currentValue'")
 
-        debug("Doing a decoder pick")
+        debug("Doing a decoder pick with value: $currentValue")
         val pickedDecoder = pickDecoder(descriptor, ops, currentValue!!, level)
         debug("Picked decoder of type ${pickedDecoder::class.simpleName} for structure ${descriptor.kind}")
 
@@ -95,7 +97,7 @@ class PassObjectDecoder<T>(override val ops: DynamicOps<T>, private val input: T
 
     override fun <T> decodeSerializableValue(deserializer: DeserializationStrategy<T>): T {
         debug("WHOAD $deserializer")
-        return super.decodeSerializableValue(deserializer)
+        return deserializer.deserialize(PassObjectDecoder(ops, currentValue!!, level + 1))
     }
 
 }
