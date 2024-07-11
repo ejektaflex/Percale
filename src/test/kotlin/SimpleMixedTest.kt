@@ -16,6 +16,7 @@ class SimpleMixedTest : ValidationTestList<JsonElement>() {
     val jimothy = TestData.Person("Jimothy", 36)
     val alice = TestData.Person("Alice", 32)
 
+
     // Array consisting of primitives
     val arrayOfMaps = TestValidation(
         arrayOf(
@@ -27,6 +28,7 @@ class SimpleMixedTest : ValidationTestList<JsonElement>() {
     )
     @Test fun testEncodeArrayOfMaps() { arrayOfMaps.encode() }
     @Test fun testDecodeArrayOfMaps() { arrayOfMaps.decode() }
+
 
     // Map consisting of array of primitives
     val mapOfArrays = TestValidation(
@@ -40,6 +42,8 @@ class SimpleMixedTest : ValidationTestList<JsonElement>() {
     @Test fun testEncodeMapOfArrays() { mapOfArrays.encode() }
     @Test fun testDecodeMapOfArrays() { arrayOfMaps.decode() }
 
+
+    // A pair of primitives
     val pairObject = TestValidation(
         33 to 30,
         PairSerializer(Int.serializer(), Int.serializer()),

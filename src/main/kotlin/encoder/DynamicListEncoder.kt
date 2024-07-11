@@ -1,12 +1,10 @@
 package encoder
 
 import com.mojang.serialization.DynamicOps
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.modules.EmptySerializersModule
 
-@OptIn(ExperimentalSerializationApi::class)
 class DynamicListEncoder<T>(override val ops: DynamicOps<T>) : AbstractOpEncoder<T>(ops) {
 
     override fun encodeFunc(func: () -> T) {
@@ -29,7 +27,6 @@ class DynamicListEncoder<T>(override val ops: DynamicOps<T>) : AbstractOpEncoder
         if (lastIndex == currentIndex) {
             return this
         }
-        println(descriptor.kind)
         val nestedEncoder = pickEncoder(descriptor, ops)
         nestedEncoders.add(nestedEncoder)
         return nestedEncoder

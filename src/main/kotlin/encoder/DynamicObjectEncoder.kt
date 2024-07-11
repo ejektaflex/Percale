@@ -34,7 +34,6 @@ class DynamicObjectEncoder<T>(override val ops: DynamicOps<T>) : AbstractOpEncod
     override val serializersModule = EmptySerializersModule()
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
-        println("Beginning Structure: $descriptor for key: $currentTag - (${descriptor.kind})")
         // Root encoder will have no tag name
         if (currentTag == "") {
             return this
@@ -45,7 +44,6 @@ class DynamicObjectEncoder<T>(override val ops: DynamicOps<T>) : AbstractOpEncod
     }
 
     override fun endStructure(descriptor: SerialDescriptor) {
-        println("Ending Structure: $descriptor")
         // Merge any nested encoders that were created over the course of this structure into the structure itself
         if (nestedEncoders.isNotEmpty()) {
             for ((neKey, neVal) in nestedEncoders) {
@@ -72,7 +70,6 @@ class DynamicObjectEncoder<T>(override val ops: DynamicOps<T>) : AbstractOpEncod
     }
 
     override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {
-        println("Encoding element: $descriptor $index")
         if (descriptor.kind == StructureKind.MAP) {
             shortCircuitKey = (index % 2 == 0) // Every even index will short circuit key
             return true

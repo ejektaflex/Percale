@@ -9,14 +9,17 @@ class SimpleObjectTest : ValidationTestList<JsonElement>() {
     val alice = TestData.Person("Alice", 32)
     val group = TestData.PersonGroup(jimothy, alice)
 
+
     // Objects consisting of primitives
     val simpleObject = TestValidation(jimothy, TestData.Person.serializer(), """{"name":"Jimothy","age":36}""")
     @Test fun testEncodeSimpleObject() { simpleObject.encode() }
     @Test fun testDecodeSimpleObject() { simpleObject.decode() }
 
+
     // Objects with reversed keys
     val simpleObjectReversed = TestValidation(jimothy, TestData.Person.serializer(), """{"age":36,"name":"Jimothy"}""")
     @Test fun testDecodeSimpleObjectReversed() { simpleObjectReversed.decode() }
+
 
     // Objects consisting of other objects
     val personGroup = TestValidation(group, TestData.PersonGroup.serializer(), """
