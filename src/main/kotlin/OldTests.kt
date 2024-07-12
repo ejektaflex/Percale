@@ -1,212 +1,206 @@
-package io.ejekta.kambrik.ext.ksx
-
-import JobWork
-import Person
 import com.mojang.datafixers.util.Pair
 import com.mojang.serialization.Codec
 import com.mojang.serialization.DataResult
 import com.mojang.serialization.DynamicOps
+import com.mojang.serialization.Encoder
 import com.mojang.serialization.JsonOps
+import com.mojang.serialization.codecs.PrimitiveCodec
+import com.mojang.serialization.codecs.RecordCodecBuilder
 import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.capturedKClass
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import java.util.stream.Stream
+import kotlinx.serialization.encoding.Encoder as KEncoder
 import kotlinx.serialization.json.*
-import kotlin.jvm.optionals.getOrNull
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.contextual
 
 
-@OptIn(InternalSerializationApi::class)
-fun <T> KSerializer<T>.codec(): Codec<T> {
-    return createCodecFromKSerializer(this)
-}
+/*
 
-class KotlinJsonObjectCodec<U>(val serializer: KSerializer<U>, val json: Json) : Codec<JsonObject> {
-    val descriptor = serializer.descriptor
+val encoder = PassEncoder.pickEncoder(serializer.descriptor, ops)
+    encoder.encodeSerializableValue(serializer, obj)
+    return encoder.getResult()
 
-    @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
-    override fun <T : Any> encode(input: JsonObject, ops: DynamicOps<T>, prefix: T): DataResult<T> {
-        val dataMap = mutableMapOf<T, T>()
-
-        for (elementIndex in 0..<descriptor.elementsCount) {
-            val elDesc = descriptor.getElementDescriptor(elementIndex)
-            val key = descriptor.getElementName(elementIndex)
-            val result = when (elDesc.serialName) {
-                "kotlin.String" -> {
-                    val value = input[key]!!.jsonPrimitive.contentOrNull
-                    value?.let { ops.createString(it) }
-                }
-                "kotlin.Int" -> {
-                    val value = input[key]!!.jsonPrimitive.intOrNull
-                    value?.let { ops.createInt(it) }
-                }
-                "kotlin.Double" -> {
-                    val value = input[key]!!.jsonPrimitive.doubleOrNull
-                    value?.let { ops.createDouble(it) }
-                }
-                else -> {
-                    println("Error!!!")
-
-                    // Now we resort to Contextual, and then Polymorphic, lookups. We finally fall back to a class load and check for it's serializer
-                    // TODO add Contextual and Polymorphic lookup before resorting to class loading for serializer fetch
-                    // TODO fetch class loadable serialnames into a map to avoid perf hits?
-                    val clazz = Class.forName(elDesc.serialName, false, ClassLoader.getSystemClassLoader()).kotlin
-
-                    println(clazz)
-                    println(clazz.serializerOrNull())
-
-                    val subObjectCodec = KotlinJsonObjectCodec(clazz.serializer(), json)
-
-                    println(subObjectCodec)
-
-                    // We naively assume that a class will instantly map to an object and not, say, an array or anything else
-                    val thingy = subObjectCodec.encodeStart(ops, input[key]!!.jsonObject)
-
-                    thingy.result().get()
-                }
-            }
-            result?.let { dataMap[ops.createString(key)] = it }
+fun <U : Any> KSerializer<U>.toCodec(): Codec<U> {
+    return object : Codec<U> {
+        override fun <T : Any> encode(input: U, ops: DynamicOps<T>, prefix: T): DataResult<T> {
+            val result = encodeWithDynamicOps(this@toCodec, input, ops)!!
+            return DataResult.success(result)
         }
 
-        val doot = ops.createMap(dataMap)
-        return ops.mergeToPrimitive(prefix, doot)
+        override fun <T : Any?> decode(ops: DynamicOps<T>, input: T): DataResult<Pair<U, T>> {
+            val result = decodeWithDynamicOps(this@toCodec, input, ops)
+            return DataResult.success(Pair(result, ops.empty()))
+        }
+    }
+}
+ */
+
+class KotlinJsonOps(val json: Json.Default) : DynamicOps<JsonElement> {
+    override fun empty(): JsonElement {
+        return JsonNull
     }
 
-    override fun <T : Any> decode(ops: DynamicOps<T>, input: T): DataResult<Pair<JsonObject, T>> {
+    override fun createNumeric(i: Number): JsonElement {
+        println("Encoding: $i")
+        return when (i) {
+            is Int -> json.encodeToJsonElement(Int.serializer(), i)
+            is Long -> json.encodeToJsonElement(Long.serializer(), i)
+            is Double -> json.encodeToJsonElement(Double.serializer(), i)
+            is Float -> json.encodeToJsonElement(Float.serializer(), i)
+            else -> throw Exception("Can't encode numeric here")
+        }
+    }
+
+    override fun createString(value: String): JsonElement {
+        return json.encodeToJsonElement(value)
+    }
+
+    override fun remove(input: JsonElement, key: String?): JsonElement {
+        TODO("Not yet implemented")
+    }
+
+    override fun createList(input: Stream<JsonElement>?): JsonElement {
+        TODO("Not yet implemented")
+    }
+
+    override fun getStream(input: JsonElement): DataResult<Stream<JsonElement>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun createMap(map: Stream<Pair<JsonElement, JsonElement>>?): JsonElement {
+        TODO("Not yet implemented")
+    }
+
+    override fun getMapValues(input: JsonElement): DataResult<Stream<Pair<JsonElement, JsonElement>>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun mergeToMap(map: JsonElement, key: JsonElement, value: JsonElement): DataResult<JsonElement> {
+        return DataResult.success(
+            buildJsonObject {
+                (map as? JsonObject)?.let {
+                    // todo make recursive for deep copy
+                    for ((k, v) in it) put(k, v)
+                }
+                put(key.jsonPrimitive.content, value)
+            }
+        )
+    }
+
+    override fun mergeToList(list: JsonElement, value: JsonElement): DataResult<JsonElement> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getStringValue(input: JsonElement): DataResult<String> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getNumberValue(input: JsonElement): DataResult<Number> {
+        TODO("Not yet implemented")
+    }
+
+    override fun <U : Any?> convertTo(outOps: DynamicOps<U>?, input: JsonElement): U {
         TODO("Not yet implemented")
     }
 
 }
 
 
-@OptIn(ExperimentalSerializationApi::class)
-fun <U> createCodecFromKSerializer(serializer: KSerializer<U>): Codec<U> {
-    val json = Json { encodeDefaults = true }
 
-    return object : Codec<U> {
 
-        override fun <T : Any> encode(input: U, ops: DynamicOps<T>, prefix: T): DataResult<T> {
-            val jsonObject = json.encodeToJsonElement(serializer, input) as JsonObject
-            val dataMap = mutableMapOf<T, T>()
+fun <A> Encoder<A>.toKotlinJsonSerializer(ops: KotlinJsonOps = KotlinJsonOps(Json)): KSerializer<A> {
+    return object : KSerializer<A> {
+        override val descriptor: SerialDescriptor
+            get() = PrimitiveSerialDescriptor("test", PrimitiveKind.INT)
 
-            // TODO iterating the serializer kinds could provide us with better typing than relying on the primitives,
-            // for better NBT interop
-
-            jsonObject.forEach { (key, value) ->
-
-                val dynamicValue = when (val jsonPrimitive = value.jsonPrimitive) {
-                    is JsonPrimitive -> when {
-                        jsonPrimitive.isString -> ops.createString(jsonPrimitive.content)
-                        jsonPrimitive.intOrNull != null -> ops.createInt(jsonPrimitive.int)
-                        jsonPrimitive.booleanOrNull != null -> ops.createBoolean(jsonPrimitive.boolean)
-                        jsonPrimitive.doubleOrNull != null -> ops.createDouble(jsonPrimitive.double)
-                        else -> ops.createString(jsonPrimitive.content)
-                    }
-                    else -> ops.createString(value.toString())
-                }
-                dataMap[ops.createString(key)] = dynamicValue
-            }
-
-            val doot = ops.createMap(dataMap)
-            return ops.mergeToPrimitive(prefix, doot)
+        override fun serialize(encoder: KEncoder, value: A) {
+            println("Auto-gen ser encoding..")
+            val result = this@toKotlinJsonSerializer.encodeStart(ops, value)
+            println("Result: ${result.result().get()}")
+            encoder.encodeSerializableValue(JsonElement.serializer(), result.result().get())
         }
 
-        override fun <T : Any> decode(ops: DynamicOps<T>, input: T): DataResult<Pair<U, T>> {
-            val nbtMap = ops.getMap(input).result().getOrNull() ?: return DataResult.error { "Not a maplike!" }
-            val descriptor = serializer.descriptor
-
-            val jsonObject = buildJsonObject {
-                for (entry in nbtMap.entries()) {
-                    println(entry)
-
-                    val key = ops.getStringValue(entry.first).result().get()
-                    val kind = descriptor.getElementDescriptor(descriptor.getElementIndex(key))
-                    println(kind.capturedKClass)
-                    println("CLASS CHK:")
-                    println(Class.forName(kind.serialName))
-                    when (val kindName: String = kind.serialName) {
-                        "kotlin.String" -> put(key, ops.getStringValue(entry.second).result().get())
-                        "kotlin.Int" -> put(key, ops.getNumberValue(entry.second).result().get().toInt())
-                        "kotlin.Double" -> put(key, ops.getNumberValue(entry.second).result().get().toDouble())
-                        else -> throw Exception("Could not decode key '$key' with serialKind '$kindName'!")
-                    }
-                }
-            }
-
-
-            val result = json.decodeFromJsonElement(serializer, jsonObject)
-
-            return DataResult.success(Pair.of(result, ops.empty()))
+        override fun deserialize(decoder: Decoder): A {
+            TODO("Not yet implemented")
         }
-
     }
 }
 
-//fun main() {
-//    testObject()
-//}
-//
-//fun testObject() {
-//    println("INITIAL:")
-//
-//    val MY_CODEC = KotlinJsonObjectCodec(Person.serializer(), Json)
-//
-//    val riebeck = Person("Riebeck", 36, 20.0, JobWork("Salesman"))
-//
-//    val riebeckJson = Json.encodeToJsonElement(riebeck) as JsonObject
-//
-//    println("\nENCODED:")
-//
-//    val riebeckNbt = MY_CODEC.encodeStart(JsonOps.INSTANCE, riebeckJson)
-//
-//    println(riebeckNbt)
-//}
-//
-//fun testNormal() {
-//    println("INITIAL:")
-//
-//    val PERSON_CODEC = Person.serializer().codec() // Auto-generate codec from Serializable object
-//
-//    val riebeck = Person("Riebeck", 36, 20.0, JobWork("Salesman"))
-//
-//    println(riebeck)
-//
-//    println("\nENCODING:")
-//
-//    val encodedElement = PERSON_CODEC.encodeStart(JsonOps.INSTANCE, riebeck)
-//    println(encodedElement)
-//    val result = encodedElement.result().getOrNull()
-//    println(result)
-//
-//    println("\nDECODING:")
-//
-//    val decodedElement = PERSON_CODEC.parse(JsonOps.INSTANCE, result)
-//
-//    println(decodedElement)
-//    println(decodedElement.result().getOrNull())
-//}
+
+/*
+
+We created a KSX Encoder/Decoder that wraps DynamicOps calls
+Now we need to create a DynamicOps that wraps KSX calls
+
+Then...
+
+OurNbtOps.INSTANCE.encodeStart(
 
 
-class KotlinJsonCodecLegacySimpleProof : Codec<JsonElement> {
-    override fun <T : Any> decode(ops: DynamicOps<T>, input: T): DataResult<Pair<JsonElement, T>> {
-        return when (input::class) {
-            String::class -> DataResult.success(Pair(JsonPrimitive(input as String), input))
-            Float::class -> DataResult.success(Pair(JsonPrimitive(input as Float), input))
-            Int::class -> DataResult.success(Pair(JsonPrimitive(input as Int), input))
-            Boolean::class -> DataResult.success(Pair(JsonPrimitive(input as Boolean), input))
-            else -> throw Exception("Unsupported conversion for ${input::class}")
+
+
+
+
+WHAT WE WANT:
+
+BlockPos.CODEC.toSerializer()
+
+
+ */
+
+data class MyPerson(val name: String, val age: Int)
+
+val MyPersonCodec : Codec<MyPerson> = RecordCodecBuilder.create { instance ->
+    instance.group(
+        Codec.STRING.fieldOf("name").forGetter { it.name },
+        Codec.INT.fieldOf("age").forGetter { it.age }
+    ).apply(instance, ::MyPerson)
+}
+
+@Serializable
+data class MyParty(val size: Int, val organizer: @Contextual MyPerson)
+
+fun main() {
+
+    val kotlinOps = KotlinJsonOps(Json.Default)
+
+    val ourJson = Json {
+        serializersModule = SerializersModule {
+            contextual(MyPersonCodec.toKotlinJsonSerializer())
         }
     }
 
-    override fun <T : Any> encode(input: JsonElement, ops: DynamicOps<T>, prefix: T): DataResult<T> {
-        return when (input) {
-            is JsonPrimitive -> when {
-                input.jsonPrimitive.isString -> Codec.STRING.encode(input.content, ops, prefix)
-                input.jsonPrimitive.booleanOrNull != null -> Codec.BOOL.encode(input.boolean, ops, prefix)
-                input.jsonPrimitive.floatOrNull != null -> Codec.FLOAT.encode(input.float, ops, prefix)
-                input.jsonPrimitive.intOrNull != null -> Codec.INT.encode(input.int, ops, prefix)
-                else -> throw Exception("Unsupported json primitive type ${input.jsonPrimitive}")
-            }
-            else -> throw Exception("Unsupported json type ${input.jsonPrimitive}")
-        }
-    }
+    // a Codec is a set of instructions explaining how to encode or decode an object
+    // as such, it's the same as a Kotlin KSerializer
+
+    // KSerializer is our version of Codec
+    val ser = MyPersonCodec.toKotlinJsonSerializer(kotlinOps)
+
+    // Abstract[En/De]coder is our version of DynamicOps
+    // Json is our version of JsonOps
+    val result = ourJson.encodeToJsonElement(ser, MyPerson("Jimothy", 36))
+
+
+    /*
+    We created an AED that wrapped a DynamicOps,
+
+     */
+
+    println(result)
+
+
+    val party = MyParty(33, MyPerson("Jimothy", 36))
+
+    val partyEncoded = ourJson.encodeToJsonElement(MyParty.serializer(), party)
+
+    println(partyEncoded)
+
+
 }
 
 

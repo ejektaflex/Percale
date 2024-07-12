@@ -22,12 +22,9 @@ val encodedDataNbt = NbtOps.INSTANCE.serialize(john)
 //=> {age:35,jobStatus:{isWorking:0b},name:"John"}
 
 
-// Decoding a JsonElement back to a Kotlin object
+// Decoding a JsonElement or an NbtElement back to a Kotlin object
 val decodedDataJson = JsonOps.INSTANCE.deserialize<JsonElement, MyPerson>(encodedDataJson!!)
-//=> MyPerson(name=John, age=35, jobStatus=JobStatus(isWorking=false))
-
-// Decoding an NbtElement back to a Kotlin object
-val decodedDataNbt = NbtOps.INSTANCE.deserialize<NbtElement, MyPerson>(encodedData!!)
+val decodedDataNbt = NbtOps.INSTANCE.deserialize<NbtElement, MyPerson>(encodedDataNbt!!)
 //=> MyPerson(name=John, age=35, jobStatus=JobStatus(isWorking=false))
 ```
 

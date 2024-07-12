@@ -59,7 +59,7 @@ fun <U : Any> DeserializationStrategy<U>.toDecoder(): Decoder<U> {
 
 fun <U : Any> KSerializer<U>.toCodec(): Codec<U> {
     return object : Codec<U> {
-        override fun <T : Any> encode(input: U, ops: DynamicOps<T>, prefix: T): DataResult<T> {
+        override fun <T : Any> encode(input: U, ops: DynamicOps<T>, prefix: T?): DataResult<T> {
             val result = encodeWithDynamicOps(this@toCodec, input, ops)!!
             return DataResult.success(result)
         }
@@ -88,19 +88,21 @@ fun main() {
 //
 //    println("Decoded Data: $bobDecoded")
 
+    val ops = JavaOps.INSTANCE
+
     val jimothy = Person("Jimothy", 36)
 
-    println("PeaceTest: ${JsonOps.INSTANCE.serialize(jimothy)}")
+    println("PeaceTest: ${ops.serialize(jimothy)}")
 
     val personCodec = Person.serializer().toCodec()
 
-    val result = personCodec.encodeStart(JsonOps.INSTANCE, jimothy).result().get()
+    val result = personCodec.encodeStart(ops, jimothy).result().get()
 
     println(result)
 
     println("Now decoding...")
 
-    val decoded = personCodec.decode(JsonOps.INSTANCE, result).result().get().first
+    val decoded = personCodec.decode(ops, result).result().get().first
 
     println(decoded)
 
