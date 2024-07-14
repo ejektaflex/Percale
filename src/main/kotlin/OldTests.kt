@@ -19,6 +19,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import percale.encoder.PassEncoder
 import reverse.codec
+import reverse.toGenericSer
 import reverse.toKotlinJsonSerializer
 import com.google.gson.JsonElement as GsonElement
 
@@ -38,6 +39,7 @@ data class MyParty(val size: Int, val organizer: @Contextual MyPerson)
 
 fun main() {
 
+    val d = MyPersonCodec.toGenericSer(RegistryOps.of(JsonOps.INSTANCE, server.registryManager))
 
     val ourJson = Json {
         serializersModule = SerializersModule {

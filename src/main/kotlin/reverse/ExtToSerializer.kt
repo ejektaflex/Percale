@@ -35,6 +35,10 @@ fun <A> Codec<A>.toKotlinJsonSerializer(json: Json = Json.Default): KSerializer<
     return toGenericSer(JsonOps.INSTANCE, GsonElementSerializer(json))
 }
 
+fun <A> Codec<A>.toWrappedJsonSerializer(ops: DynamicOps<GsonElement>, json: Json = Json.Default): KSerializer<A> {
+    return toGenericSer(ops, GsonElementSerializer(json))
+}
+
 fun <A, U> Codec<A>.toGenericSer(ops: DynamicOps<U>, opsSerializer: KSerializer<U>): KSerializer<A> {
     return object : KSerializer<A> {
         override val descriptor: SerialDescriptor

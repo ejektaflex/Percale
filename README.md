@@ -101,6 +101,18 @@ sword[BONUS_DAMAGE] = BonusDamage(5f)
 val bonusDamage = sword[BONUS_DAMAGE]
 ```
 
+We can also easily serialize components to JSON for various uses, even if they don't have an associated KSerializer:
+
+```kotlin
+val itemRarity = stack[DataComponentTypes.RARITY]
+val raritySerializer = DataComponentTypes.RARITY.codec!!.toKotlinJsonSerializer()
+
+val encodedRarity = Json.encodeToString(raritySerializer, itemRarity)
+//=> "common"
+
+```
+
+
 ### Writing Minecraft classes to config files
 
 One limitation of using KotlinX Serialization within Minecraft is that there's no way of writing Minecraft classes (like ItemStack, BlockPos, Vec3, etc) easily to JSON, which means that you can't use these classes directly in datapacks or config files. However, it's possible using the (experimental) Codec to Serializer feature, as long as a codec exists for that class.
@@ -133,6 +145,36 @@ val encoded = ourJson.encodeToJsonElement(
 )
 // => {"amount":1000,"location":[123,64,96]}
 
+```
+### Serializing Registry-Sensitive Minecraft classes
+
+The above method for serializing Minecraft objects usually works great. However, some codecs will fail, since they can't access the registry. Notable, The Minecraft ToolComponent will fail to serialize and deserialize because the DynamicOps it uses needs access to a registry. For example:
+
+```kotlin
+val enchantsType = DataComponentsType.ENCHANTMENTS
+val enchantsCodec = enchantsType.codec!!
+
+// Grab the enchantments from an itemstack
+val enchants = stack[enchantsType]!! // we know this item has enchantments
+// Grab the enchantments codec
+val enchantsSerializer = enchantsCodec.toKotlinJsonSerializer()
+
+// This code will fail, because the Enchantments component requires a registry wrapper context:
+val enchantsJson = Json.encodeToString(enchantsSerializer, enchants)
+//=> ERROR!
+```
+
+To get around this, we can wrap the ops in a RegistryOps and use that, like so:
+
+```kotlin
+// Wrap the JsonOps in a RegistryOps that has a registry context
+val regOps = RegistryOps.of(JsonOps.INSTANCE, server.registryManager)
+// Create a new KSerializer that uses the wrapped DynamicOps
+val enchantsSerializer = enchantsCodec.toWrappedJsonSerializer(regOps)
+
+// Now you can freely use the Serializer to encode/decode Registry-sensitive classes!
+val enchantsJson = Json.encodeToString(enchantsSerializer, stack[enchantsType]!!)
+//=> {"levels":{"minecraft:sharpness":5}}
 ```
 
 
