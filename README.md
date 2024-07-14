@@ -30,7 +30,7 @@ val decodedDataNbt = NbtOps.INSTANCE.deserialize<NbtElement, MyPerson>(encodedDa
 
 As you can see, we can use this wrapper to encode and decode data to any provided DynamicOps format.
 
-## Generating Codecs
+## Generating Codecs from KSerializers
 
 Since a Codec is just a pair of methods for encoding and decoding, we can automatically generate a Codec from a KSerializer:
 
@@ -41,11 +41,11 @@ data class MyPerson(val name: String, val age: Int, val jobStatus: JobStatus)
 val PERSON_CODEC: Codec<MyPerson> = MyPerson.serializer().toCodec()
 ```
 
-## Generating Serializers (Experimental)
+## Generating Serializers from Codecs (Limited, Experimental)
 
 Percale also has the (very experimental) ability to generate a KotlinX Serializer from a Mojang Codec, effectively doing the reverse. There is one major limitation, and that is that it only works for JSON/JsonOps and no other formats.
 
-Normally, this would *not* be feasible because Mojang Codecs do not store any equivalent of Kotlin's serial descriptor information, making static analysis and encoding/decoding of objects difficult (especially when you consider JVM type erasure). However, if we rely on JsonOps to do the encoding and decoding for us, then pass that to KotlinX Serialization to re-encode/decode the output. 
+Normally, this would *not* be feasible because Mojang Codecs do not store any equivalent of Kotlin's serial descriptor information, making static analysis and encoding/decoding of objects difficult (especially when you consider JVM type erasure). However, we can rely on JsonOps to do the encoding and decoding for us, then pass that to KotlinX Serialization to re-encode/decode the output. 
 
 This means that, effectively, we can create a KSerializer from a Codec, as long as we are using KSX Json and JsonOps:
 
@@ -88,7 +88,7 @@ val BONUS_DAMAGE = ComponentType.builder<BonusDamage>().codec(
     BonusDamage.serializer().toCodec()
 ).build()
 
-// Register the component when Minecraft loads..
+// Register the component when Minecraft loads
 Registry.register(Registries.DATA_COMPONENT_TYPE, Identifier.of("mymod", "bonus_damage"), BONUS_DAMAGE)
 
 // Later, lets say you have an item...
@@ -99,6 +99,40 @@ sword[BONUS_DAMAGE] = BonusDamage(5f)
 
 // Or retrieve it, like this!:
 val bonusDamage = sword[BONUS_DAMAGE]
+```
+
+### Writing Minecraft classes to config files
+
+One limitation of using KotlinX Serialization within Minecraft is that there's no way of writing Minecraft classes (like ItemStack, BlockPos, Vec3, etc) easily to JSON, which means that you can't use these classes directly in datapacks or config files. However, it's possible using the (experimental) Codec to Serializer feature, as long as a codec exists for that class.
+
+```kotlin
+val pos = BlockPos(33, 32, 31)
+
+// Convert the codec into a serializer
+val posSerializer = BlockPos.CODEC.toKotlinJsonSerializer()
+
+val encoded = Json.encodeToJsonElement(posSerializer, pos)
+//=> [33,32,31]
+```
+
+But what if we are serializing an object that *contains* a Minecraft class? Then you'll have to add the serializer as a contextual serializer to the Json object. Here's an example:
+
+```kotlin
+// A data class containing a Minecraft blockpos; External classes must be marked as Contextual
+data class Treasure(val amount: Int, val location: @Contextual BlockPos)
+
+val ourJson = Json {
+    serializersModule = SerializersModule {
+        // A nice shorthand that registers the codec as a contextual serializer
+        codec(BlockPos.CODEC)
+    }
+}
+
+val encoded = ourJson.encodeToJsonElement(
+    Treasure(1000, BlockPos(123, 64, 96))
+)
+// => {"amount":1000,"location":[123,64,96]}
+
 ```
 
 

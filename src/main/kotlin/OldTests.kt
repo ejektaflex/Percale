@@ -40,9 +40,10 @@ fun main() {
 
 
     val ourJson = Json {
-//        serializersModule = SerializersModule {
-//            codec(MyPersonCodec)
-//        }
+        serializersModule = SerializersModule {
+            contextual(MyPersonCodec.toKotlinJsonSerializer())
+            codec(MyPersonCodec)
+        }
         prettyPrint = true
     }
 
