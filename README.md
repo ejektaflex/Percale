@@ -115,7 +115,7 @@ val encodedRarity = Json.encodeToString(raritySerializer, itemRarity)
 
 ### Writing Minecraft classes to config files
 
-One limitation of using KotlinX Serialization within Minecraft is that there's no way of writing Minecraft classes (like ItemStack, BlockPos, Vec3, etc) easily to JSON, which means that you can't use these classes directly in datapacks or config files. However, it's possible using the (experimental) Codec to Serializer feature, as long as a codec exists for that class.
+One limitation of using KotlinX Serialization within Minecraft is that there's no way of writing Minecraft classes (like ItemStack, BlockPos, Vec3, etc) easily to JSON, which means that you can't use these classes directly in datapacks or config files without writing your own custom KSerializer for each and every class. However, it's possible using the (experimental) Codec to Serializer feature, as long as a codec exists for that class.
 
 ```kotlin
 val pos = BlockPos(33, 32, 31)
@@ -127,10 +127,10 @@ val encoded = Json.encodeToJsonElement(posSerializer, pos)
 //=> [33,32,31]
 ```
 
-But what if we are serializing an object that *contains* a Minecraft class? Then you'll have to add the serializer as a contextual serializer to the Json object. Here's an example:
+But what if we are serializing an object that *contains* a Minecraft class? Then you'll have to add the codec as a contextual serializer. Here's an example:
 
 ```kotlin
-// A data class containing a Minecraft blockpos; External classes must be marked as Contextual
+// A data class containing a Minecraft BlockPos; External classes must be marked as Contextual
 data class Treasure(val amount: Int, val location: @Contextual BlockPos)
 
 val ourJson = Json {
@@ -148,7 +148,7 @@ val encoded = ourJson.encodeToJsonElement(
 ```
 ### Serializing Registry-Sensitive Minecraft classes
 
-The above method for serializing Minecraft objects usually works great. However, some codecs will fail, since they can't access the registry. Notable, The Minecraft Enchantments component will fail to serialize and deserialize because the DynamicOps it uses needs access to a registry. For example:
+The above method for serializing Minecraft objects usually works great. However, some codecs will fail, since they can't access the registry. Notably, The Minecraft Enchantments component will fail to serialize and deserialize because the DynamicOps it uses needs access to a registry. For example:
 
 ```kotlin
 val enchantsType = DataComponentsType.ENCHANTMENTS
