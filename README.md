@@ -148,7 +148,7 @@ val encoded = ourJson.encodeToJsonElement(
 ```
 ### Serializing Registry-Sensitive Minecraft classes
 
-The above method for serializing Minecraft objects usually works great. However, some codecs will fail, since they can't access the registry. Notable, The Minecraft ToolComponent will fail to serialize and deserialize because the DynamicOps it uses needs access to a registry. For example:
+The above method for serializing Minecraft objects usually works great. However, some codecs will fail, since they can't access the registry. Notable, The Minecraft Enchantments component will fail to serialize and deserialize because the DynamicOps it uses needs access to a registry. For example:
 
 ```kotlin
 val enchantsType = DataComponentsType.ENCHANTMENTS
