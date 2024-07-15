@@ -1,10 +1,14 @@
 import com.mojang.datafixers.util.Pair
 import com.mojang.serialization.*
-import percale.encoder.PassEncoder
-import percale.decoder.PassDecoder
+import io.ejekta.percale.encoder.PassEncoder
+import io.ejekta.percale.decoder.PassDecoder
+import io.ejekta.percale.reverse.toKotlinJsonSerializer
 import kotlinx.serialization.*
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.SerializersModuleBuilder
+import kotlinx.serialization.modules.contextual
 
 // ### Encoding ###
 
@@ -56,40 +60,6 @@ fun <U : Any> KSerializer<U>.toCodec(serialMod: SerializersModule = EmptySeriali
     }
 }
 
-
-
-fun main() {
-//    val result = JsonOps.INSTANCE.serialize(true)
-//    println("Encoded Data: $result")
-//
-//    val bob = Person("Bob")
-//
-//    val bobEncoded = JsonOps.INSTANCE.serialize(bob)
-//
-//    println("\n\n### DECODING NOW! ###\n\n")
-//
-//    //val bobDecoded = JsonOps.INSTANCE.deserialize<JsonElement, Person>(bobEncoded!!)
-//    val bobDecoded = passWithDynamicOps(Person.serializer(), bobEncoded!!, JsonOps.INSTANCE)
-//
-//    println("Decoded Data: $bobDecoded")
-
-    val ops = JavaOps.INSTANCE
-
-    val jimothy = Person("Jimothy", 36)
-
-    println("PeaceTest: ${ops.serialize(jimothy)}")
-
-    val personCodec = Person.serializer().toCodec()
-
-    val result = personCodec.encodeStart(ops, jimothy).result().get()
-
-    println(result)
-
-    println("Now decoding...")
-
-    val decoded = personCodec.decode(ops, result).result().get().first
-
-    println(decoded)
-
+inline fun <reified A : Any> SerializersModuleBuilder.codec(codec: Codec<A>, json: Json = Json.Default) {
+    contextual(codec.toKotlinJsonSerializer(json))
 }
-

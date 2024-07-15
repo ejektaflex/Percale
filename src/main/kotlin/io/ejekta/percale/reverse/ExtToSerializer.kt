@@ -1,20 +1,16 @@
-package reverse
+package io.ejekta.percale.reverse
 
-import com.google.gson.JsonElement as GsonElement
-import com.google.gson.JsonParser as GsonParser
 import com.mojang.serialization.Codec
 import com.mojang.serialization.DynamicOps
 import com.mojang.serialization.JsonOps
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.modules.EmptySerializersModule
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.SerializersModuleBuilder
-import kotlinx.serialization.modules.contextual
+import com.google.gson.JsonElement as GsonElement
+import com.google.gson.JsonParser as GsonParser
 
 
 // This is gross but ok
@@ -56,6 +52,4 @@ fun <A, U> Codec<A>.toGenericSer(ops: DynamicOps<U>, opsSerializer: KSerializer<
     }
 }
 
-inline fun <reified A : Any> SerializersModuleBuilder.codec(codec: Codec<A>, json: Json = Json.Default) {
-    contextual(codec.toKotlinJsonSerializer(json))
-}
+
