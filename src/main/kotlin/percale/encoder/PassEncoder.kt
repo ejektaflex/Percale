@@ -8,12 +8,16 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.encoding.AbstractEncoder
+import kotlinx.serialization.modules.EmptySerializersModule
+import kotlinx.serialization.modules.SerializersModule
 
 @OptIn(ExperimentalSerializationApi::class)
-abstract class PassEncoder<T>(open val ops: DynamicOps<T>) : AbstractEncoder() {
+abstract class PassEncoder<T>(open val ops: DynamicOps<T>, serialMod: SerializersModule = EmptySerializersModule()) : AbstractEncoder() {
     abstract fun getResult(): T
     abstract fun encodeFunc(func: () -> T)
     abstract fun push(result: T)
+
+    override val serializersModule = serialMod
 
     override fun encodeString(value: String) {
         encodeFunc { ops.createString(value) }
@@ -44,10 +48,10 @@ abstract class PassEncoder<T>(open val ops: DynamicOps<T>) : AbstractEncoder() {
     }
 
     companion object {
-        fun <V> pickEncoder(descriptor: SerialDescriptor, ops: DynamicOps<V>): PassEncoder<V> {
+        fun <V> pickEncoder(descriptor: SerialDescriptor, ops: DynamicOps<V>, serialMod: SerializersModule): PassEncoder<V> {
             return when (descriptor.kind) {
-                StructureKind.CLASS, StructureKind.MAP, is PrimitiveKind, SerialKind.ENUM -> PassObjectEncoder(ops)
-                StructureKind.LIST -> PassListEncoder(ops)
+                StructureKind.CLASS, StructureKind.MAP, is PrimitiveKind, SerialKind.ENUM -> PassObjectEncoder(ops, serialMod)
+                StructureKind.LIST -> PassListEncoder(ops, serialMod)
                 else -> throw SerializationException("Unsupported descriptor type for our DynamicOps encoder: ${descriptor.kind}, ${descriptor.kind::class}")
             }
         }

@@ -3,12 +3,14 @@ import com.mojang.serialization.*
 import percale.encoder.PassEncoder
 import percale.decoder.PassDecoder
 import kotlinx.serialization.*
+import kotlinx.serialization.modules.EmptySerializersModule
+import kotlinx.serialization.modules.SerializersModule
 
 // ### Encoding ###
 
 @OptIn(ExperimentalSerializationApi::class)
-fun <T, U : Any> encodeWithDynamicOps(serializer: SerializationStrategy<U>, obj: U, ops: DynamicOps<T>): T? {
-    val encoder = PassEncoder.pickEncoder(serializer.descriptor, ops)
+fun <T, U : Any> encodeWithDynamicOps(serializer: SerializationStrategy<U>, obj: U, ops: DynamicOps<T>, serialMod: SerializersModule = EmptySerializersModule()): T? {
+    val encoder = PassEncoder.pickEncoder(serializer.descriptor, ops, serialMod)
     encoder.encodeSerializableValue(serializer, obj)
     return encoder.getResult()
 }
@@ -21,14 +23,6 @@ fun <T, U : Any> DynamicOps<T>.serialize(obj: U, serializer: SerializationStrate
     return encodeWithDynamicOps(serializer, obj, this)
 }
 
-fun <U : Any> SerializationStrategy<U>.toEncoder(): Encoder<U> {
-    return object : Encoder<U> {
-        override fun <T : Any> encode(input: U, ops: DynamicOps<T>, prefix: T): DataResult<T> {
-            val result = encodeWithDynamicOps(this@toEncoder, input, ops)!!
-            return DataResult.success(result)
-        }
-    }
-}
 
 // ### Decoding ###
 
@@ -46,21 +40,12 @@ fun <T, U : Any> DynamicOps<T>.deserialize(obj: T, serializer: DeserializationSt
     return decodeWithDynamicOps(serializer, obj, this)
 }
 
-fun <U : Any> DeserializationStrategy<U>.toDecoder(): Decoder<U> {
-    return object : Decoder<U> {
-        override fun <T : Any?> decode(ops: DynamicOps<T>, input: T): DataResult<Pair<U, T>> {
-            val result = decodeWithDynamicOps(this@toDecoder, input, ops)
-            return DataResult.success(Pair(result, ops.empty()))
-        }
-    }
-}
-
 // ### Codec
 
-fun <U : Any> KSerializer<U>.toCodec(): Codec<U> {
+fun <U : Any> KSerializer<U>.toCodec(serialMod: SerializersModule = EmptySerializersModule()): Codec<U> {
     return object : Codec<U> {
         override fun <T : Any> encode(input: U, ops: DynamicOps<T>, prefix: T?): DataResult<T> {
-            val result = encodeWithDynamicOps(this@toCodec, input, ops)!!
+            val result = encodeWithDynamicOps(this@toCodec, input, ops, serialMod)!!
             return DataResult.success(result)
         }
 

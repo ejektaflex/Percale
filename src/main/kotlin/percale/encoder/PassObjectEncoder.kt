@@ -7,9 +7,10 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.modules.EmptySerializersModule
+import kotlinx.serialization.modules.SerializersModule
 
 @OptIn(ExperimentalSerializationApi::class)
-class PassObjectEncoder<T>(override val ops: DynamicOps<T>) : PassEncoder<T>(ops) {
+class PassObjectEncoder<T>(override val ops: DynamicOps<T>, serialMod: SerializersModule) : PassEncoder<T>(ops, serialMod) {
 
     override fun encodeFunc(func: () -> T) {
         if (shortCircuitKey) {
@@ -38,7 +39,7 @@ class PassObjectEncoder<T>(override val ops: DynamicOps<T>) : PassEncoder<T>(ops
         if (currentTag == "") {
             return this
         }
-        val nestedEncoder = pickEncoder(descriptor, ops)
+        val nestedEncoder = pickEncoder(descriptor, ops, serializersModule)
         nestedEncoders[currentTag] = nestedEncoder
         return nestedEncoder
     }
