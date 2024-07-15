@@ -1,5 +1,7 @@
 import com.google.gson.JsonParser
 import com.mojang.serialization.DynamicOps
+import io.ejekta.percale.deserialize
+import io.ejekta.percale.serialize
 import kotlinx.serialization.KSerializer
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo

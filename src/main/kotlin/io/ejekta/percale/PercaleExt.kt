@@ -1,3 +1,5 @@
+package io.ejekta.percale
+
 import com.mojang.datafixers.util.Pair
 import com.mojang.serialization.*
 import io.ejekta.percale.encoder.PassEncoder
