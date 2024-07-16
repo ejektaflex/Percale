@@ -3,10 +3,7 @@ package io.ejekta.percale.encoder
 import com.mojang.serialization.DynamicOps
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.SerialKind
-import kotlinx.serialization.descriptors.StructureKind
+import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.AbstractEncoder
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
@@ -52,6 +49,7 @@ abstract class PassEncoder<T>(open val ops: DynamicOps<T>, serialMod: Serializer
             return when (descriptor.kind) {
                 StructureKind.CLASS, StructureKind.MAP, is PrimitiveKind, SerialKind.ENUM -> PassObjectEncoder(ops, serialMod)
                 StructureKind.LIST -> PassListEncoder(ops, serialMod)
+                PolymorphicKind.OPEN -> PassPolymorphicEncoder(ops, serialMod)
                 else -> throw SerializationException("Unsupported descriptor type for our DynamicOps encoder: ${descriptor.kind}, ${descriptor.kind::class}")
             }
         }

@@ -9,10 +9,10 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.modules.EmptySerializersModule
+import kotlinx.serialization.modules.SerializersModule
 
 @OptIn(ExperimentalSerializationApi::class)
-class PassPrimitiveDecoder<T>(override val ops: DynamicOps<T>, private val input: T, level: Int) : PassDecoder<T>(ops, level) {
-    override val serializersModule = EmptySerializersModule()
+class PassPrimitiveDecoder<T>(override val ops: DynamicOps<T>, private val input: T, level: Int, serialMod: SerializersModule) : PassDecoder<T>(ops, level, serialMod) {
 
     override val currentValue: T?
         get() = input

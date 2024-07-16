@@ -7,11 +7,11 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.modules.EmptySerializersModule
+import kotlinx.serialization.modules.SerializersModule
 import kotlin.jvm.optionals.getOrNull
 
 @OptIn(ExperimentalSerializationApi::class)
-class PassObjectDecoder<T>(override val ops: DynamicOps<T>, private val input: T, level: Int) : PassDecoder<T>(ops, level) {
-    override val serializersModule = EmptySerializersModule()
+class PassObjectDecoder<T>(override val ops: DynamicOps<T>, private val input: T, level: Int, serialMod: SerializersModule) : PassDecoder<T>(ops, level, serialMod) {
 
     private var inputMap =
         ops.getMap(input).result().getOrNull()

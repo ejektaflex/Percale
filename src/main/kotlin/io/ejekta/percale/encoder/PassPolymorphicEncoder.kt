@@ -10,7 +10,7 @@ import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
 @OptIn(ExperimentalSerializationApi::class)
-class PassObjectEncoder<T>(override val ops: DynamicOps<T>, serialMod: SerializersModule) : PassEncoder<T>(ops, serialMod) {
+class PassPolymorphicEncoder<T>(override val ops: DynamicOps<T>, serialMod: SerializersModule) : PassEncoder<T>(ops, serialMod) {
 
     override fun encodeFunc(func: () -> T) {
         if (shortCircuitKey) {
@@ -33,6 +33,7 @@ class PassObjectEncoder<T>(override val ops: DynamicOps<T>, serialMod: Serialize
     private var shortCircuitKey = false
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
+        println("Poly beginning structure")
         // Root encoder will have no tag name
         if (currentTag == "") {
             return this
