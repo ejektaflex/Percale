@@ -5,6 +5,7 @@ import com.mojang.serialization.Codec
 import com.mojang.serialization.DynamicOps
 import com.mojang.serialization.JsonOps
 import com.mojang.serialization.codecs.ListCodec
+import io.ejekta.percale.Percale
 import io.ejekta.percale.decoder.PassDecoder
 import io.ejekta.percale.encoder.PassEncoder
 import kotlinx.serialization.KSerializer
@@ -23,6 +24,7 @@ import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtOps
 import net.minecraft.nbt.Tag
 import net.minecraft.resources.RegistryOps
+import net.minecraft.util.NullOps
 import net.minecraft.world.item.ItemStack
 
 fun <A> Codec<A>.toSerializer(like: KSerializer<*>): KSerializer<A> {
@@ -69,10 +71,8 @@ private fun getSerializerFromName(codecName: String): KSerializer<*>? {
             println("LCT: $listCodecType")
 
             val subCodecSerial = getSerializerFromName(listCodecType)
-            //val subCodec = codecLookup[listCodecType]
 
             println("SCS: $subCodecSerial")
-            //println("SC: $subCodec")
 
             subCodecSerial?.let {
                 ListSerializer(it)
@@ -124,12 +124,17 @@ fun <A> Codec<A>.toSerializer(typeDescriptor: SerialDescriptor? = null): KSerial
             println()
 
             val realOps = if (pass is RegistryOps) {
-                pass.delegate
+                println("REALLY WAS: ${pass.delegate}")
+                pass.delegate // uses AT/AW
             } else {
                 pass
             }
 
             when (realOps) {
+                is NullOps -> {
+                    // No-op
+                    println("Skipping nullops serialize")
+                }
                 is JsonOps -> {
                     val result = this@toSerializer.encodeStart(pass, value)
                     if (result.isError) {
@@ -151,10 +156,24 @@ fun <A> Codec<A>.toSerializer(typeDescriptor: SerialDescriptor? = null): KSerial
         override fun deserialize(decoder: Decoder): A {
             val passDecoder = (decoder as? PassDecoder<*>) ?: throw Exception("Cannot serialize a non-dynamicops format with this serializer!")
             val pass = passDecoder.ops as DynamicOps<Any>
-            when (pass) {
-                is JsonOps, is RegistryOps -> {
+
+            val realOps = if (pass is RegistryOps) {
+                pass.delegate // uses AT/AW
+            } else {
+                pass
+            }
+
+            println("Must deser: ${passDecoder.input}, ${passDecoder.input!!::class.simpleName}, passClass: ${pass::class.simpleName}, rc: ${realOps::class.simpleName}")
+
+            when (realOps) {
+                is NullOps -> {
+                    // No-op
+                    println("Skipping nullops deserialize")
+                    // If this ever breaks, we can maybe passDecoder.decodeSerializableValue with a null value/serialier or something
+                    return Unit as A
+                }
+                is JsonOps -> {
                     //val result = this@toSerializer.parse(pass, passDecoder.input)
-                    println("Must deser: ${passDecoder.input}, ${passDecoder.input!!::class.simpleName}")
                     val jsony = passDecoder.decodeSerializableValue(GsonElementSerializer)
                     println("JSONY: $jsony")
                     val result = this@toSerializer.parse(pass, jsony)
