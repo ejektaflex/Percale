@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "percale",
   "version": "${version}",
-
+  "accessWidener": "percale.accesswidener",
   "name": "Percale",
   "description": "DynamicOps && Kotlinx Serialization Interop Library",
   "authors": [

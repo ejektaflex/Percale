@@ -24,9 +24,13 @@ dependencies {
     modImplementation "net.fabricmc:fabric-language-kotlin:1.12.3+kotlin.2.0.21"
 }
 
+println("Fabric Build Yo")
+
 loom {
+    println("Looking for ${mod_id}.accesswidener")
     def aw = project(':common').file("src/main/resources/${mod_id}.accesswidener")
     if (aw.exists()) {
+        println("Found AccessWidener!")
         accessWidenerPath.set(aw)
     }
     mixin {

@@ -31,6 +31,11 @@ subprojects {
             enabled = false
         }
 
+        // We also have no Java test files to compile
+        tasks.named("compileTestJava") {
+            enabled = false
+        }
+
         tasks.withType<ProcessResources> {
             from(project(":common").sourceSets.main.get().resources)
         }

@@ -21,6 +21,7 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonObject
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtOps
+import net.minecraft.nbt.Tag
 import net.minecraft.resources.RegistryOps
 import net.minecraft.world.item.ItemStack
 
@@ -117,8 +118,19 @@ fun <A> Codec<A>.toSerializer(typeDescriptor: SerialDescriptor? = null): KSerial
             }
         override fun serialize(encoder: Encoder, value: A) {
             val pass = (encoder as? PassEncoder<*>)?.ops ?: throw Exception("Cannot serialize a non-dynamicops format with this serializer!")
-            when (pass) {
-                is JsonOps, is RegistryOps -> {
+
+            println("SERIAL ME!!")
+            println(pass::class)
+            println()
+
+            val realOps = if (pass is RegistryOps) {
+                pass.delegate
+            } else {
+                pass
+            }
+
+            when (realOps) {
+                is JsonOps -> {
                     val result = this@toSerializer.encodeStart(pass, value)
                     if (result.isError) {
                         throw SerializationException("Cannot auto-serialize codec, msg: ${result.error().get().message()}")
@@ -131,7 +143,7 @@ fun <A> Codec<A>.toSerializer(typeDescriptor: SerialDescriptor? = null): KSerial
                     if (result.isError) {
                         throw SerializationException("Cannot auto-serialize codec, msg: ${result.error().get().message()}")
                     }
-                    encoder.encodeSerializableValue(TagSerializer, result.orThrow)
+                    encoder.encodeSerializableValue(TagSerializer, result.orThrow as Tag)
                 }
                 else -> throw Exception("Unknown ops type!: $pass (${pass::class.simpleName})")
             }
