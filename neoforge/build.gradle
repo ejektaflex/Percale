@@ -12,7 +12,7 @@ repositories {
 }
 
 dependencies {
-    implementation("thedarkcolour:kotlinforforge-neoforge:5.6.0")
+    implementation("thedarkcolour:kotlinforforge-neoforge:${forgelike_adapter_version}")
 }
 
 neoForge {
