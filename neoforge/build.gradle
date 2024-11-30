@@ -3,6 +3,18 @@ plugins {
     id 'net.neoforged.moddev'
 }
 
+repositories {
+    // Add KFF Maven repository
+    maven {
+        name = 'Kotlin for Forge'
+        url = 'https://thedarkcolour.github.io/KotlinForForge/'
+    }
+}
+
+dependencies {
+    implementation("thedarkcolour:kotlinforforge-neoforge:5.6.0")
+}
+
 neoForge {
     version = neoforge_version
     // Automatically enable neoforge AccessTransformers if the file exists
