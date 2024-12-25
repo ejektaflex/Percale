@@ -1,7 +1,11 @@
 package io.ejekta.percale.reverse
 
+import com.google.gson.JsonElement
+import com.google.gson.JsonPrimitive
+import com.mojang.serialization.JsonOps
 import io.ejekta.percale.decoder.PassDecoder
 import io.ejekta.percale.encoder.PassEncoder
+import io.ejekta.percale.serialize
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -21,6 +25,12 @@ object NbtStringSerializer : KSerializer<StringTag> {
         encoder.encodeString(value.asString)
     }
     override fun deserialize(decoder: Decoder): StringTag {
+        // If inverse, serialize
+        val pass = decoder as? PassDecoder<*>
+        if (pass?.ops is JsonOps) {
+            val newDec = NbtOps.INSTANCE.serialize(pass.input as JsonPrimitive, GsonStringSerializer, pass.serializersModule)
+            return newDec as StringTag
+        }
         return StringTag.valueOf(decoder.decodeString())
     }
 }
@@ -32,6 +42,16 @@ object NbtIntSerializer : KSerializer<IntTag> {
     }
     override fun deserialize(decoder: Decoder): IntTag {
         return IntTag.valueOf(decoder.decodeInt())
+    }
+}
+
+object NbtByteSerializer : KSerializer<ByteTag> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("percale.IntTag", PrimitiveKind.INT)
+    override fun serialize(encoder: Encoder, value: ByteTag) {
+        encoder.encodeByte(value.asByte)
+    }
+    override fun deserialize(decoder: Decoder): ByteTag {
+        return ByteTag.valueOf(decoder.decodeByte())
     }
 }
 
@@ -96,6 +116,7 @@ object TagSerializer : KSerializer<Tag> {
     // Even if NBT won't use this, it's useful for JsonOps and such
     override val descriptor: SerialDescriptor = buildSerialDescriptor("percale.Tag", PolymorphicKind.OPEN) {
         element("percale.IntTag", NbtIntSerializer.descriptor)
+        element("percale.ByteTag", NbtByteSerializer.descriptor)
         element("percale.StringTag", NbtStringSerializer.descriptor)
         element("percale.CompoundTag", CompoundTagSerializer.descriptor)
         element("percale.ListTag", NbtListSerializer.descriptor)
@@ -115,6 +136,13 @@ object TagSerializer : KSerializer<Tag> {
     override fun deserialize(decoder: Decoder): Tag {
         // If not an NBT pass decoder, then this could be an Tag being serialized by JsonOps! handle normally in that instance
         val pass = decoder as? PassDecoder<*> ?: return decoder.decodeSerializableValue(PolymorphicSerializer(Tag::class))
+
+        // If inverse, serialize
+        if (pass.ops is JsonOps) {
+            val newDec = NbtOps.INSTANCE.serialize(pass.input as JsonElement, GsonElementSerializer, pass.serializersModule)
+            return newDec as Tag
+        }
+
         val inp = pass.input as Tag
         val deser = fromInput(inp)
         return pass.decodeSerializableValue(deser, inp)
@@ -125,6 +153,7 @@ object TagSerializer : KSerializer<Tag> {
             is StringTag -> NbtStringSerializer
             is IntTag -> NbtIntSerializer
             is CompoundTag -> CompoundTagSerializer
+            is ByteTag -> NbtByteSerializer
             is ListTag -> NbtListSerializer
             is IntArrayTag -> NbtIntArraySerializer
             is LongTag -> NbtLongSerializer

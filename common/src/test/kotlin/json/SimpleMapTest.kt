@@ -1,7 +1,14 @@
+package json
+
+import TestValidation
+import ValidationTestList
 import com.google.gson.JsonElement
 import com.mojang.serialization.JsonOps
+import io.ejekta.percale.reverse.CompoundTagSerializer
+import io.ejekta.percale.reverse.TagSerializer
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
+import net.minecraft.nbt.CompoundTag
 import org.junit.jupiter.api.Test
 
 class SimpleMapTest : ValidationTestList<JsonElement>() {
@@ -40,5 +47,15 @@ class SimpleMapTest : ValidationTestList<JsonElement>() {
     )
     @Test fun testEncode2dMap() { twoDimPrimMap.encode() }
     @Test fun testDecode2dMap() { twoDimPrimMap.decode() }
+
+    val compTest = TestValidation(
+        CompoundTag().apply {
+            putInt("a", 1)
+        },
+        CompoundTagSerializer,
+        """{"a":1}"""
+    )
+    @Test fun testEncodeSimpleCompound() { compTest.encode() }
+    @Test fun testDecodeSimpleCompound() { compTest.decode() }
 
 }

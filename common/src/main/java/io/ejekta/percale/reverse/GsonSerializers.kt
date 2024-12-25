@@ -5,9 +5,11 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import com.google.gson.internal.LazilyParsedNumber
+import com.mojang.serialization.DynamicOps
 import com.mojang.serialization.JsonOps
 import io.ejekta.percale.decoder.PassDecoder
 import io.ejekta.percale.encoder.PassEncoder
+import io.ejekta.percale.serialize
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -18,7 +20,10 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtOps
+import net.minecraft.nbt.StringTag
+import net.minecraft.nbt.Tag
 
 object GsonStringSerializer : KSerializer<JsonPrimitive> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("percale.GsonPrimitiveString", PrimitiveKind.STRING)
@@ -26,6 +31,14 @@ object GsonStringSerializer : KSerializer<JsonPrimitive> {
         encoder.encodeString(value.asString)
     }
     override fun deserialize(decoder: Decoder): JsonPrimitive {
+        val pass = decoder as? PassDecoder<*>
+
+        // If inverse, serialize
+        if (pass?.ops is NbtOps) {
+            val newDec = JsonOps.INSTANCE.serialize(pass.input as StringTag, NbtStringSerializer, pass.serializersModule)
+            return newDec as JsonPrimitive
+        }
+
         return JsonPrimitive(decoder.decodeString())
     }
 }
@@ -70,6 +83,16 @@ object GsonLazyNumberSerializer : KSerializer<JsonPrimitive> {
     }
 }
 
+object GsonBoolSerializer : KSerializer<JsonPrimitive> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("percale.GsonPrimitve", PrimitiveKind.BOOLEAN)
+    override fun serialize(encoder: Encoder, value: JsonPrimitive) {
+        encoder.encodeBoolean(value.asBoolean)
+    }
+    override fun deserialize(decoder: Decoder): JsonPrimitive {
+        return JsonPrimitive(decoder.decodeBoolean())
+    }
+}
+
 object GsonObjectSerializer : KSerializer<JsonObject> {
     private val ser
         get() = MapSerializer(String.serializer(), GsonElementSerializer)
@@ -78,6 +101,8 @@ object GsonObjectSerializer : KSerializer<JsonObject> {
         encoder.encodeSerializableValue(ser, value.asMap())
     }
     override fun deserialize(decoder: Decoder): JsonObject {
+        val pass = decoder as? PassDecoder<*>
+
         val jsonMap = decoder.decodeSerializableValue(ser)
         return JsonObject().apply {
             for ((key, value) in jsonMap) {
@@ -129,9 +154,33 @@ object GsonElementSerializer : KSerializer<JsonElement> {
     override fun deserialize(decoder: Decoder): JsonElement {
         // If not an NBT pass decoder, then this could be an Tag being serialized by JsonOps! handle normally in that instance
         val pass = decoder as? PassDecoder<*> ?: return decoder.decodeSerializableValue(PolymorphicSerializer(JsonElement::class))
+
+        // If inverse, serialize
+        if (pass.ops is NbtOps) {
+            val newDec = JsonOps.INSTANCE.serialize(pass.input as Tag, TagSerializer, pass.serializersModule)
+            return newDec as JsonElement
+        }
+
         val inp = pass.input as JsonElement
         val deser = fromInput(inp)
         return pass.decodeSerializableValue(deser, inp)
+
+        // TODO we are assuming input will always be JsonElement here
+//        val inp = pass.input
+//        return when (inp) {
+//            is JsonElement -> {
+//                val deser = fromInput(inp)
+//                pass.decodeSerializableValue(deser, inp)
+//            }
+//            is Tag -> {
+//                val deser = TagSerializer.fromInput(inp)
+//                val newNbtDecoder = PassDecoder.pickDecoder(deser.descriptor, NbtOps.INSTANCE, inp, decoder.level, decoder.serializersModule)
+//                val newVal = newNbtDecoder.decodeSerializableValue(deser)
+//
+//                null
+//            }
+//            else -> throw Exception("I have no idea what this input is")
+//        }
     }
 
     fun fromInput(input: JsonElement): KSerializer<JsonElement> {
@@ -150,7 +199,8 @@ object GsonElementSerializer : KSerializer<JsonElement> {
                             }
                         }
                     }
-                    else -> throw Exception("nu")
+                    input.isBoolean -> GsonBoolSerializer
+                    else -> throw Exception("No gson serial handling set up for: $input")
                 }
             }
             is JsonObject -> GsonObjectSerializer

@@ -1,3 +1,7 @@
+package json
+
+import TestValidation
+import ValidationTestList
 import com.google.gson.JsonElement
 import com.mojang.serialization.JsonOps
 import io.ejekta.percale.reverse.PercaleJson

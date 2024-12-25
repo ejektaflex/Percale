@@ -54,7 +54,6 @@ abstract class PassEncoder<T>(open val ops: DynamicOps<T>, serialMod: Serializer
 
     companion object {
         fun <V> pickEncoder(descriptor: SerialDescriptor, ops: DynamicOps<V>, serialMod: SerializersModule): PassEncoder<V> {
-            Percale.syslog(10, "NL: ${descriptor.kind}")
             return when (descriptor.kind) {
                 StructureKind.CLASS, StructureKind.MAP, is PrimitiveKind, SerialKind.ENUM, PolymorphicKind.OPEN -> PassObjectEncoder(ops, serialMod)
                 StructureKind.LIST -> PassListEncoder(ops, serialMod)

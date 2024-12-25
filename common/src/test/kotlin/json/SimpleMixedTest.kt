@@ -1,3 +1,7 @@
+package json
+
+import TestValidation
+import ValidationTestList
 import com.google.gson.JsonElement
 import com.mojang.serialization.JsonOps
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -6,8 +10,6 @@ import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.PairSerializer
 import kotlinx.serialization.builtins.serializer
 import org.junit.jupiter.api.Test
-import strikt.api.expectThat
-import strikt.assertions.isEqualTo
 
 @OptIn(ExperimentalSerializationApi::class)
 class SimpleMixedTest : ValidationTestList<JsonElement>() {

@@ -1,3 +1,5 @@
+package json
+
 import com.google.gson.JsonElement
 import com.google.gson.JsonPrimitive
 import com.mojang.serialization.JsonOps
