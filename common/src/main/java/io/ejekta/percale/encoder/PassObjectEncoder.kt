@@ -68,6 +68,7 @@ class PassObjectEncoder<T>(override val ops: DynamicOps<T>, serialMod: Serialize
     }
 
     override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {
+        if (!super.encodeElement(descriptor, index)) return false
         if (descriptor.kind == StructureKind.MAP) {
             shortCircuitKey = (index % 2 == 0) // Every even index will short circuit key
             return true

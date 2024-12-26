@@ -42,6 +42,7 @@ class PassListEncoder<T>(override val ops: DynamicOps<T>, serialMod: Serializers
     }
 
     override fun encodeElement(descriptor: SerialDescriptor, index: Int): Boolean {
+        if (!super.encodeElement(descriptor, index)) return false
         lastIndex = currentIndex
         currentIndex = index
         return true

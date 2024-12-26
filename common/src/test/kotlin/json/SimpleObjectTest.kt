@@ -4,6 +4,8 @@ import TestValidation
 import ValidationTestList
 import com.google.gson.JsonElement
 import com.mojang.serialization.JsonOps
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 
 class SimpleObjectTest : ValidationTestList<JsonElement>() {
@@ -31,5 +33,14 @@ class SimpleObjectTest : ValidationTestList<JsonElement>() {
         """.trimIndent())
     @Test fun testEncodePersonGroup() { personGroup.encode() }
     @Test fun testDecodePersonGroup() { personGroup.decode() }
+
+    @Serializable
+    data class DefaultedPerson(val name: String = "Robert", val age: Int)
+
+    val defaultedPerson = TestValidation(DefaultedPerson(age = 36), DefaultedPerson.serializer(), """
+            {"age":36}
+        """.trimIndent())
+    @Test fun testEncodeDefaultedPerson() { defaultedPerson.encode() }
+    @Test fun testDecodeDefaultedPerson() { defaultedPerson.decode() }
 
 }

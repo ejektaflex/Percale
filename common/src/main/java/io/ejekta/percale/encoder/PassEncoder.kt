@@ -18,6 +18,12 @@ abstract class PassEncoder<T>(open val ops: DynamicOps<T>, serialMod: Serializer
 
     override val serializersModule = serialMod
 
+    override fun shouldEncodeElementDefault(descriptor: SerialDescriptor, index: Int): Boolean {
+        val anns = descriptor.getElementDescriptor(index).annotations
+        println("ANNS: $anns")
+        return false
+    }
+
     override fun encodeString(value: String) {
         encodeFunc { ops.createString(value) }
     }
