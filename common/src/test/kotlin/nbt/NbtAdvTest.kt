@@ -5,13 +5,22 @@ import ValidationTestList
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
+import com.mojang.serialization.Codec
 import com.mojang.serialization.JsonOps
 import io.ejekta.percale.reverse.GsonElementSerializer
+import io.ejekta.percale.reverse.GsonIntSerializer
 import io.ejekta.percale.reverse.GsonObjectSerializer
+import io.ejekta.percale.reverse.toSerializer
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialKind
+import kotlinx.serialization.descriptors.buildSerialDescriptor
 import net.minecraft.nbt.NbtOps
 import net.minecraft.nbt.Tag
+import net.minecraft.util.ExtraCodecs
 import org.junit.jupiter.api.Test
 
 class NbtAdvTest : ValidationTestList<Tag>() {
@@ -21,10 +30,13 @@ class NbtAdvTest : ValidationTestList<Tag>() {
     val alice = TestData.Person("Alice", 32)
 
     // Objects consisting of primitives
+    @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
     val simpleMap = TestValidation(
-        JsonPrimitive(2),
-        GsonElementSerializer,
-        """2"""
+        JsonObject().apply {
+            addProperty("a", 1)
+        },
+        ExtraCodecs.JSON.toSerializer(kotlinx.serialization.json.JsonElement.serializer()),
+        """{a:1b}"""
     )
     @Test fun testEncodeSimpleMap() { simpleMap.encode() }
     @Test fun testDecodeSimpleMap() { simpleMap.decode() }

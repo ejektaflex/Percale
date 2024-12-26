@@ -24,6 +24,7 @@ import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtOps
 import net.minecraft.nbt.Tag
 import net.minecraft.resources.RegistryOps
+import net.minecraft.util.ExtraCodecs
 import net.minecraft.util.NullOps
 import net.minecraft.world.item.ItemStack
 
@@ -53,6 +54,7 @@ private val mcLookup: Map<Codec<*>, KSerializer<*>> = mapOf(
 
 fun <A> Codec<A>.guessSerializer(): KSerializer<*>? {
     when (this) {
+        ExtraCodecs.JSON -> JsonObject.serializer()
         ItemStack.CODEC -> return JsonObject.serializer()
     }
     return getSerializerFromName(toString())

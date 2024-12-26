@@ -27,10 +27,10 @@ object NbtStringSerializer : KSerializer<StringTag> {
     override fun deserialize(decoder: Decoder): StringTag {
         // If inverse, serialize
         val pass = decoder as? PassDecoder<*>
-        if (pass?.ops is JsonOps) {
-            val newDec = NbtOps.INSTANCE.serialize(pass.input as JsonPrimitive, GsonStringSerializer, pass.serializersModule)
-            return newDec as StringTag
-        }
+//        if (pass?.ops is JsonOps) {
+//            val newDec = NbtOps.INSTANCE.serialize(pass.input as JsonPrimitive, GsonStringSerializer, pass.serializersModule)
+//            return newDec as StringTag
+//        }
         return StringTag.valueOf(decoder.decodeString())
     }
 }
@@ -46,7 +46,7 @@ object NbtIntSerializer : KSerializer<IntTag> {
 }
 
 object NbtByteSerializer : KSerializer<ByteTag> {
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("percale.IntTag", PrimitiveKind.INT)
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("percale.ByteTag", PrimitiveKind.BYTE)
     override fun serialize(encoder: Encoder, value: ByteTag) {
         encoder.encodeByte(value.asByte)
     }
@@ -138,10 +138,10 @@ object TagSerializer : KSerializer<Tag> {
         val pass = decoder as? PassDecoder<*> ?: return decoder.decodeSerializableValue(PolymorphicSerializer(Tag::class))
 
         // If inverse, serialize
-        if (pass.ops is JsonOps) {
-            val newDec = NbtOps.INSTANCE.serialize(pass.input as JsonElement, GsonElementSerializer, pass.serializersModule)
-            return newDec as Tag
-        }
+//        if (pass.ops is JsonOps) {
+//            val newDec = NbtOps.INSTANCE.serialize(pass.input as JsonElement, GsonElementSerializer, pass.serializersModule)
+//            return newDec as Tag
+//        }
 
         val inp = pass.input as Tag
         val deser = fromInput(inp)

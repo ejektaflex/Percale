@@ -42,6 +42,10 @@ abstract class PassEncoder<T>(open val ops: DynamicOps<T>, serialMod: Serializer
         encodeFunc { ops.createInt(value) }
     }
 
+    override fun encodeByte(value: Byte) {
+        encodeFunc { ops.createByte(value) }
+    }
+
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
         encodeString(enumDescriptor.getElementName(index))
     }
@@ -55,7 +59,7 @@ abstract class PassEncoder<T>(open val ops: DynamicOps<T>, serialMod: Serializer
     companion object {
         fun <V> pickEncoder(descriptor: SerialDescriptor, ops: DynamicOps<V>, serialMod: SerializersModule): PassEncoder<V> {
             return when (descriptor.kind) {
-                StructureKind.CLASS, StructureKind.MAP, is PrimitiveKind, SerialKind.ENUM, PolymorphicKind.OPEN -> PassObjectEncoder(ops, serialMod)
+                StructureKind.CLASS, StructureKind.MAP, is PrimitiveKind, SerialKind.ENUM, PolymorphicKind.OPEN, PolymorphicKind.SEALED -> PassObjectEncoder(ops, serialMod)
                 StructureKind.LIST -> PassListEncoder(ops, serialMod)
                 else -> throw SerializationException("Unsupported descriptor type for our DynamicOps encoder: ${descriptor.kind}, ${descriptor.kind::class}")
             }//.also { println("${descriptor.kind} -> ${it::class.qualifiedName}") }

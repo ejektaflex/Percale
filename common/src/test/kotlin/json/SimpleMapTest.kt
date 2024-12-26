@@ -6,6 +6,7 @@ import com.google.gson.JsonElement
 import com.mojang.serialization.JsonOps
 import io.ejekta.percale.reverse.CompoundTagSerializer
 import io.ejekta.percale.reverse.TagSerializer
+import io.ejekta.percale.reverse.toSerializer
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import net.minecraft.nbt.CompoundTag
@@ -50,10 +51,10 @@ class SimpleMapTest : ValidationTestList<JsonElement>() {
 
     val compTest = TestValidation(
         CompoundTag().apply {
-            putInt("a", 1)
+            putInt("a", 100000)
         },
-        CompoundTagSerializer,
-        """{"a":1}"""
+        CompoundTag.CODEC.toSerializer(MapSerializer(String.serializer(), Unit.serializer()).descriptor),
+        """{"a":100000}"""
     )
     @Test fun testEncodeSimpleCompound() { compTest.encode() }
     @Test fun testDecodeSimpleCompound() { compTest.decode() }

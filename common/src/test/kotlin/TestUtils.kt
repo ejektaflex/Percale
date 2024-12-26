@@ -14,7 +14,8 @@ import strikt.assertions.isEqualTo
 
 data class TestValidation<U : Any>(val obj: U, val serial: KSerializer<U>, val str: String) {
     fun <T> decode(ops: DynamicOps<T>, serialMod: SerializersModule = EmptySerializersModule()) {
-        val result = ops.deserialize(parsed(ops), serial, serialMod) // unsafe cast, but we only have JsonOps to test on so works for now
+        val stringEquivalent = parsed(ops)
+        val result = ops.deserialize(stringEquivalent, serial, serialMod) // unsafe cast, but we only have JsonOps to test on so works for now
         expectThat(result).isEqualTo(obj)
     }
 

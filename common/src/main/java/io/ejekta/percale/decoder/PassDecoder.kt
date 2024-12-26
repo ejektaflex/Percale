@@ -9,6 +9,8 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.AbstractDecoder
 import kotlinx.serialization.modules.SerializersModule
+import net.minecraft.nbt.Tag
+import net.minecraft.resources.RegistryOps
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -47,6 +49,10 @@ abstract class PassDecoder<T>(open val ops: DynamicOps<T>, val level: Int, seria
         return enumDescriptor.getElementIndex(decodeString())
     }
 
+    override fun decodeByte(): Byte {
+        return decodeFunc { ops.getNumberValue(currentValue) }.toByte()
+    }
+
     override fun decodeNotNullMark(): Boolean {
         return true
     }
@@ -71,10 +77,13 @@ abstract class PassDecoder<T>(open val ops: DynamicOps<T>, val level: Int, seria
     }
 
     companion object {
-        fun <V> pickDecoder(descriptor: SerialDescriptor, ops: DynamicOps<V>, input: V, level: Int = 0, serialMod: SerializersModule): PassDecoder<V> {
+        fun <V> pickDecoder(descriptor: SerialDescriptor, inOps: DynamicOps<V>, input: V, level: Int = 0, serialMod: SerializersModule): PassDecoder<V> {
             Percale.syslog(level, "Picking decoder for $descriptor - ${descriptor.kind}")
+
+            val ops = inOps
+
             return when (descriptor.kind) {
-                StructureKind.CLASS, PolymorphicKind.OPEN -> PassObjectDecoder(ops, input, level + 1, serialMod)
+                StructureKind.CLASS, PolymorphicKind.OPEN, PolymorphicKind.SEALED -> PassObjectDecoder(ops, input, level + 1, serialMod)
                 is PrimitiveKind, SerialKind.ENUM, SerialKind.CONTEXTUAL  -> PassPrimitiveDecoder(ops, input, level + 1, serialMod)
                 StructureKind.MAP -> PassMapDecoder(ops, input, level + 1, serialMod)
                 StructureKind.LIST -> PassListDecoder(ops, input, level + 1, serialMod)

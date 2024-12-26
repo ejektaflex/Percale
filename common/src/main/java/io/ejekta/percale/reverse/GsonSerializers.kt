@@ -24,6 +24,7 @@ import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtOps
 import net.minecraft.nbt.StringTag
 import net.minecraft.nbt.Tag
+import net.minecraft.resources.RegistryOps
 
 object GsonStringSerializer : KSerializer<JsonPrimitive> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("percale.GsonPrimitiveString", PrimitiveKind.STRING)
@@ -34,10 +35,10 @@ object GsonStringSerializer : KSerializer<JsonPrimitive> {
         val pass = decoder as? PassDecoder<*>
 
         // If inverse, serialize
-        if (pass?.ops is NbtOps) {
-            val newDec = JsonOps.INSTANCE.serialize(pass.input as StringTag, NbtStringSerializer, pass.serializersModule)
-            return newDec as JsonPrimitive
-        }
+//        if (pass?.ops is NbtOps) {
+//            val newDec = JsonOps.INSTANCE.serialize(pass.input as StringTag, NbtStringSerializer, pass.serializersModule)
+//            return newDec as JsonPrimitive
+//        }
 
         return JsonPrimitive(decoder.decodeString())
     }
@@ -152,35 +153,25 @@ object GsonElementSerializer : KSerializer<JsonElement> {
     }
 
     override fun deserialize(decoder: Decoder): JsonElement {
-        // If not an NBT pass decoder, then this could be an Tag being serialized by JsonOps! handle normally in that instance
+        // If not an NBT pass decoder, then this could be a Tag being serialized by JsonOps! handle normally in that instance
         val pass = decoder as? PassDecoder<*> ?: return decoder.decodeSerializableValue(PolymorphicSerializer(JsonElement::class))
 
         // If inverse, serialize
-        if (pass.ops is NbtOps) {
-            val newDec = JsonOps.INSTANCE.serialize(pass.input as Tag, TagSerializer, pass.serializersModule)
-            return newDec as JsonElement
-        }
+//        if (pass.ops is NbtOps) {
+//
+//            val doot = JsonOps.INSTANCE.serialize(pass.input as Tag, TagSerializer, pass.serializersModule)
+//
+//            val ro: RegistryOps<JsonElement>
+//
+//
+//
+////            val newDec = JsonOps.INSTANCE.serialize(pass.input as Tag, TagSerializer, pass.serializersModule)
+////            return newDec as JsonElement
+//        }
 
         val inp = pass.input as JsonElement
         val deser = fromInput(inp)
         return pass.decodeSerializableValue(deser, inp)
-
-        // TODO we are assuming input will always be JsonElement here
-//        val inp = pass.input
-//        return when (inp) {
-//            is JsonElement -> {
-//                val deser = fromInput(inp)
-//                pass.decodeSerializableValue(deser, inp)
-//            }
-//            is Tag -> {
-//                val deser = TagSerializer.fromInput(inp)
-//                val newNbtDecoder = PassDecoder.pickDecoder(deser.descriptor, NbtOps.INSTANCE, inp, decoder.level, decoder.serializersModule)
-//                val newVal = newNbtDecoder.decodeSerializableValue(deser)
-//
-//                null
-//            }
-//            else -> throw Exception("I have no idea what this input is")
-//        }
     }
 
     fun fromInput(input: JsonElement): KSerializer<JsonElement> {
