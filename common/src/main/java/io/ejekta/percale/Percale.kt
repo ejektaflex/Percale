@@ -7,6 +7,8 @@ import java.util.logging.Formatter
 
 
 object Percale {
+    var shouldSyslog = false
+
     val LOGGER = Logger.getLogger("Percale").apply {
         useParentHandlers = false
 
@@ -34,7 +36,9 @@ object Percale {
     }
 
     fun syslog(amt: Int, msg: String) {
-        LOGGER.info(lp(amt, msg))
+        if (shouldSyslog) {
+            LOGGER.info(lp(amt, msg))
+        }
     }
 
     private fun lp(amt: Int, str: String): String {

@@ -45,36 +45,26 @@ private val baseLookup: Map<Codec<*>, KSerializer<*>> = mapOf(
     Codec.LONG_STREAM to LongArraySerializer(),
     // Codec.PASSTHROUGH
     Codec.SHORT to Short.serializer(),
-    Codec.STRING to String.serializer()
+    Codec.STRING to String.serializer(),
+    ExtraCodecs.JSON to JsonObject.serializer(),
+    ItemStack.CODEC to JsonObject.serializer(),
 )
 
-private val mcLookup: Map<Codec<*>, KSerializer<*>> = mapOf(
-
-)
-
-fun <A> Codec<A>.guessSerializer(): KSerializer<*>? {
-    when (this) {
-        ExtraCodecs.JSON -> JsonObject.serializer()
-        ItemStack.CODEC -> return JsonObject.serializer()
-    }
-    return getSerializerFromName(toString())
-}
-
-private fun getSerializerFromName(codecName: String): KSerializer<*>? {
+private fun guessSerializerFromName(codecName: String): KSerializer<*>? {
     val prefix = codecName.substringBefore("[")
-    println("Prefix: $prefix")
+    //println("Prefix: $prefix")
     val heuristic: KSerializer<*>? = when (prefix) {
         "IntStream" -> baseLookup[Codec.INT_STREAM]
         "String" -> baseLookup[Codec.STRING]
         "ListCodec" -> {
             val listCodecPath = codecName.split("][").first() + "]"
-            println("LC: '$listCodecPath'")
+            //println("LC: '$listCodecPath'")
             val listCodecType = codecName.substringAfter("[").substringBeforeLast("]")
-            println("LCT: $listCodecType")
+            //println("LCT: $listCodecType")
 
-            val subCodecSerial = getSerializerFromName(listCodecType)
+            val subCodecSerial = guessSerializerFromName(listCodecType)
 
-            println("SCS: $subCodecSerial")
+            //println("SCS: $subCodecSerial")
 
             subCodecSerial?.let {
                 ListSerializer(it)
@@ -99,6 +89,10 @@ fun <A> Codec<A>.toSerializer(typeDescriptor: SerialDescriptor? = null): KSerial
                     return typeDescriptor
                 }
 
+                if (this@toSerializer in baseLookup.keys) {
+                    return baseLookup[this@toSerializer]!!.descriptor
+                }
+
                 // Otherwise, if an CompoundTag codec, then use that
                 if (this@toSerializer == CompoundTag.CODEC) {
                     return CompoundTagSerializer.descriptor
@@ -109,24 +103,24 @@ fun <A> Codec<A>.toSerializer(typeDescriptor: SerialDescriptor? = null): KSerial
 //                    return it
 //                }
                 // Otherwise, static list codec type lookup
-                println(this@toSerializer is ListCodec<*>)
+                //println(this@toSerializer is ListCodec<*>)
 
-                println("Must heuristically generate a SerialDescriptor for: ${this@toSerializer}")
+                //println("Must heuristically generate a SerialDescriptor for: ${this@toSerializer}")
 
                 // Otherwise, icky heuristic lookup
-                val heuristic = guessSerializer()?.descriptor
+                val heuristic = guessSerializerFromName(this@toSerializer.toString())?.descriptor
 
                 return heuristic ?: throw Exception("No descriptor found for codec: $this@toSerializer (${this@toSerializer::class.simpleName})")// PrimitiveSerialDescriptor("UNKNOWN_SER", PrimitiveKind.STRING)
             }
         override fun serialize(encoder: Encoder, value: A) {
             val pass = (encoder as? PassEncoder<*>)?.ops ?: throw Exception("Cannot serialize a non-dynamicops format with this serializer!")
 
-            println("SERIAL ME!!")
-            println(pass::class)
-            println()
+            //println("SERIAL ME!!")
+            //println(pass::class)
+            //println()
 
             val realOps = if (pass is RegistryOps) {
-                println("REALLY WAS: ${pass.delegate}")
+                //println("REALLY WAS: ${pass.delegate}")
                 pass.delegate // uses AT/AW
             } else {
                 pass
@@ -142,7 +136,7 @@ fun <A> Codec<A>.toSerializer(typeDescriptor: SerialDescriptor? = null): KSerial
                     if (result.isError) {
                         throw SerializationException("Cannot auto-serialize codec, msg: ${result.error().get().message()}")
                     }
-                    println("RES: ${result.orThrow}")
+                    //println("RES: ${result.orThrow}")
                     encoder.encodeSerializableValue(GsonElementSerializer, result.orThrow as JsonElement)
                 }
                 is NbtOps -> {
@@ -165,7 +159,7 @@ fun <A> Codec<A>.toSerializer(typeDescriptor: SerialDescriptor? = null): KSerial
                 pass
             }
 
-            println("Must deser: ${passDecoder.input}, ${passDecoder.input!!::class.simpleName}, passClass: ${pass::class.simpleName}, rc: ${realOps::class.simpleName}")
+            //println("Must deser: ${passDecoder.input}, ${passDecoder.input!!::class.simpleName}, passClass: ${pass::class.simpleName}, rc: ${realOps::class.simpleName}")
 
             when (realOps) {
                 is NullOps -> {
@@ -177,9 +171,9 @@ fun <A> Codec<A>.toSerializer(typeDescriptor: SerialDescriptor? = null): KSerial
                 is JsonOps -> {
                     //val result = this@toSerializer.parse(pass, passDecoder.input)
                     val jsony = passDecoder.decodeSerializableValue(GsonElementSerializer)
-                    println("JSONY: $jsony")
+                    //println("JSONY: $jsony")
                     val result = this@toSerializer.parse(pass, jsony)
-                    println("RESULT: $result")
+                    //println("RESULT: $result")
                     return result.orThrow
                 }
                 is NbtOps -> {
