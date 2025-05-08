@@ -17,7 +17,7 @@ class PassListDecoder<T>(override val ops: DynamicOps<T>, override val input: T,
 
     override val currentValue: T?
         get() {
-            return inputList[currentIndex]
+            return inputList.getOrNull(currentIndex)
         }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {

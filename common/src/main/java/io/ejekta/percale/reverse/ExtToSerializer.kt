@@ -47,7 +47,7 @@ private val baseLookup: Map<Codec<*>, KSerializer<*>> = mapOf(
     Codec.SHORT to Short.serializer(),
     Codec.STRING to String.serializer(),
     ExtraCodecs.JSON to JsonObject.serializer(),
-    ItemStack.CODEC to JsonObject.serializer(),
+//    ItemStack.CODEC to JsonObject.serializer(),
 )
 
 private fun guessSerializerFromName(codecName: String): KSerializer<*>? {

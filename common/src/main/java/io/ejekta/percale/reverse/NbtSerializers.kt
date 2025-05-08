@@ -65,6 +65,16 @@ object NbtLongSerializer : KSerializer<LongTag> {
     }
 }
 
+object NbtShortSerializer : KSerializer<ShortTag> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("percale.ShortTag", PrimitiveKind.LONG)
+    override fun serialize(encoder: Encoder, value: ShortTag) {
+        encoder.encodeShort(value.asShort)
+    }
+    override fun deserialize(decoder: Decoder): ShortTag {
+        return ShortTag.valueOf(decoder.decodeShort())
+    }
+}
+
 object NbtListSerializer : KSerializer<ListTag> {
     private val ser: KSerializer<List<Tag>>
         get() = ListSerializer(TagSerializer)
@@ -157,6 +167,7 @@ object TagSerializer : KSerializer<Tag> {
             is ListTag -> NbtListSerializer
             is IntArrayTag -> NbtIntArraySerializer
             is LongTag -> NbtLongSerializer
+            is ShortTag -> NbtShortSerializer
             else -> throw Exception("TagSerializer does not know what serializer to use for this type: ${input.type}")
             //...etc
         }
