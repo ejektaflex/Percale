@@ -50,6 +50,10 @@ abstract class PassEncoder<T>(open val ops: DynamicOps<T>, serialMod: Serializer
         encodeFunc { ops.createByte(value) }
     }
 
+    override fun encodeShort(value: Short) {
+        encodeFunc { ops.createShort(value) }
+    }
+
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
         encodeString(enumDescriptor.getElementName(index))
     }

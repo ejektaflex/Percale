@@ -30,7 +30,10 @@ abstract class PassDecoder<T>(open val ops: DynamicOps<T>, val level: Int, seria
     }
 
     override fun decodeBoolean(): Boolean {
-        return decodeFunc { ops.getBooleanValue(currentValue) }
+        return decodeFunc {
+            // TODO try catch, then attempt getNumberValue toBoolean or something like that
+            ops.getBooleanValue(currentValue)
+        }
     }
 
     override fun decodeLong(): Long {
@@ -43,6 +46,10 @@ abstract class PassDecoder<T>(open val ops: DynamicOps<T>, val level: Int, seria
 
     override fun decodeDouble(): Double {
         return decodeFunc { ops.getNumberValue(currentValue) }.toDouble()
+    }
+
+    override fun decodeShort(): Short {
+        return decodeFunc { ops.getNumberValue(currentValue) }.toShort()
     }
 
     override fun decodeEnum(enumDescriptor: SerialDescriptor): Int {

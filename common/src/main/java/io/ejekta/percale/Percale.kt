@@ -7,7 +7,7 @@ import java.util.logging.Formatter
 
 
 object Percale {
-    var shouldSyslog = false
+    var shouldSyslog = true
 
     val LOGGER = Logger.getLogger("Percale").apply {
         useParentHandlers = false
