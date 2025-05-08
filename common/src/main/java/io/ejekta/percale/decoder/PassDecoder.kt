@@ -30,9 +30,15 @@ abstract class PassDecoder<T>(open val ops: DynamicOps<T>, val level: Int, seria
     }
 
     override fun decodeBoolean(): Boolean {
-        return decodeFunc {
-            // TODO try catch, then attempt getNumberValue toBoolean or something like that
-            ops.getBooleanValue(currentValue)
+        // NBT has no bool, so sometimes it will get converted to number
+        return try {
+            decodeFunc {
+                ops.getBooleanValue(currentValue)
+            }
+        } catch (ise: IllegalStateException) {
+            decodeFunc { ops.getNumberValue(currentValue) }.run {
+                this.toByte().toInt() != 0
+            }
         }
     }
 
