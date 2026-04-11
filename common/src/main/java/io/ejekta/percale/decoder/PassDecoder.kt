@@ -67,7 +67,7 @@ abstract class PassDecoder<T>(open val ops: DynamicOps<T>, val level: Int, seria
     }
 
     override fun decodeNotNullMark(): Boolean {
-        return true
+        return (currentValue ?: input) != ops.empty()
     }
 
     override fun decodeNull(): Nothing? {
@@ -86,7 +86,11 @@ abstract class PassDecoder<T>(open val ops: DynamicOps<T>, val level: Int, seria
     }
 
     override fun <T : Any> decodeNullableSerializableValue(deserializer: DeserializationStrategy<T?>): T? {
-        return decodeSerializableValue(deserializer)
+        return if (decodeNotNullMark()) {
+            decodeSerializableValue(deserializer)
+        } else {
+            decodeNull()
+        }
     }
 
     companion object {

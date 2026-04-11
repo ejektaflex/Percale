@@ -35,14 +35,14 @@ class SimpleMixedTest : ValidationTestList<JsonElement>() {
     // Map consisting of array of primitives
     val mapOfArrays = TestValidation(
         mapOf(
-            "a" to arrayOf(99, 98, 87),
-            "b" to arrayOf(39, 38, 37),
+            "a" to listOf(99, 98, 87),
+            "b" to listOf(39, 38, 37),
         ),
-        MapSerializer(String.serializer(), ArraySerializer(Int.serializer())),
+        MapSerializer(String.serializer(), kotlinx.serialization.builtins.ListSerializer(Int.serializer())),
         """{"a":[99,98,87],"b":[39,38,37]}"""
     )
     @Test fun testEncodeMapOfArrays() { mapOfArrays.encode() }
-    @Test fun testDecodeMapOfArrays() { arrayOfMaps.decode() }
+    @Test fun testDecodeMapOfArrays() { mapOfArrays.decode() }
 
 
     // A pair of primitives

@@ -10,6 +10,16 @@ object TestData {
     @Serializable
     data class Vehicle(val frontSeat: PersonGroup, val rearSeat: PersonGroup)
 
+    @Serializable
+    data class NullablePerson(val name: String?, val age: Int?)
+
+    @Serializable
+    data class NullableContainer(
+        val primary: NullablePerson?,
+        val aliases: List<String?>,
+        val scores: Map<String, Int?>
+    )
+
     enum class DogBreed {
         POMERANIAN,
         HUSKY

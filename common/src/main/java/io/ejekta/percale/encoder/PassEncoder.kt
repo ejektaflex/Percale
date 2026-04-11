@@ -54,13 +54,19 @@ abstract class PassEncoder<T>(open val ops: DynamicOps<T>, serialMod: Serializer
         encodeFunc { ops.createShort(value) }
     }
 
+    override fun encodeNull() {
+        encodeFunc { ops.empty() }
+    }
+
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
         encodeString(enumDescriptor.getElementName(index))
     }
 
     override fun <T : Any> encodeNullableSerializableValue(serializer: SerializationStrategy<T>, value: T?) {
-        value?.let {
-            encodeSerializableValue(serializer, it)
+        if (value == null) {
+            encodeNull()
+        } else {
+            encodeSerializableValue(serializer, value)
         }
     }
 

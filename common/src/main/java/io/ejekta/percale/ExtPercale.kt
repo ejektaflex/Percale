@@ -10,6 +10,7 @@ import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.SerializersModuleBuilder
 import kotlinx.serialization.modules.contextual
+import kotlin.jvm.optionals.getOrNull
 
 // ### Encoding ###
 
@@ -60,12 +61,24 @@ fun <U : Any> KSerializer<U>.toCodec(serialMod: SerializersModule = EmptySeriali
     return object : Codec<U> {
         override fun <T : Any> encode(input: U, ops: DynamicOps<T>, prefix: T?): DataResult<T> {
             val result = encodeWithDynamicOps(this@toCodec, input, ops, serialMod)!!
-            return DataResult.success(result)
+            if (prefix == null || prefix == ops.empty()) {
+                return DataResult.success(result)
+            }
+
+            ops.getMap(result).result().getOrNull()?.let { mapEntries ->
+                return ops.mergeToMap(prefix, mapEntries)
+            }
+
+            ops.getStream(result).result().getOrNull()?.toList()?.let { listEntries ->
+                return ops.mergeToList(prefix, listEntries)
+            }
+
+            return ops.mergeToPrimitive(prefix, result)
         }
 
         override fun <T : Any?> decode(ops: DynamicOps<T>, input: T): DataResult<Pair<U, T>> {
             val result = decodeWithDynamicOps(this@toCodec, input, ops, serialMod)
-            return DataResult.success(Pair(result, ops.empty()))
+            return DataResult.success(Pair(result, input))
         }
     }
 }

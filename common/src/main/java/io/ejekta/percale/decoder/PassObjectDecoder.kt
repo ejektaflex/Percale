@@ -8,6 +8,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.modules.SerializersModule
 import kotlin.jvm.optionals.getOrNull
+import kotlin.streams.asSequence
 
 @OptIn(ExperimentalSerializationApi::class)
 class PassObjectDecoder<T>(override val ops: DynamicOps<T>, override val input: T, level: Int, serialMod: SerializersModule) : PassDecoder<T>(ops, level, serialMod) {
@@ -34,11 +35,22 @@ class PassObjectDecoder<T>(override val ops: DynamicOps<T>, override val input: 
 
     override val currentValue: T?
         get() {
-            return inputMap?.get(currentKey)
+            val key = currentKey ?: return null
+            val tokenValue = inputMap?.get(ops.createString(key))
+            val stringValue = inputMap?.get(key)
+            return tokenValue ?: stringValue ?: if (key in inputKeys) ops.empty() else null
         }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
-        inputKeys = (0..<descriptor.elementsCount).map { descriptor.getElementName(it) }.filter { inputMap?.get(it) != null }.toMutableList()
+        val presentKeys = ops.getMapValues(input).result().getOrNull()
+            ?.asSequence()
+            ?.mapNotNull { entry -> ops.getStringValue(entry.first).result().getOrNull() }
+            ?.toSet()
+            .orEmpty()
+        inputKeys = (0..<descriptor.elementsCount)
+            .map { descriptor.getElementName(it) }
+            .filter { it in presentKeys }
+            .toMutableList()
         Percale.syslog(level, "Input keys are: $inputKeys")
         return this // maybe only if currentIndex < 0 ?
     }
