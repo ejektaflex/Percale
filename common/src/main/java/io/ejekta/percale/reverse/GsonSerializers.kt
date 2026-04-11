@@ -74,6 +74,36 @@ object GsonFloatSerializer : KSerializer<JsonPrimitive> {
     }
 }
 
+object GsonShortSerializer : KSerializer<JsonPrimitive> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("percale.GsonPrimitiveShort", PrimitiveKind.SHORT)
+    override fun serialize(encoder: Encoder, value: JsonPrimitive) {
+        encoder.encodeShort(value.asShort)
+    }
+    override fun deserialize(decoder: Decoder): JsonPrimitive {
+        return JsonPrimitive(decoder.decodeShort())
+    }
+}
+
+object GsonDoubleSerializer : KSerializer<JsonPrimitive> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("percale.GsonPrimitiveDouble", PrimitiveKind.DOUBLE)
+    override fun serialize(encoder: Encoder, value: JsonPrimitive) {
+        encoder.encodeDouble(value.asDouble)
+    }
+    override fun deserialize(decoder: Decoder): JsonPrimitive {
+        return JsonPrimitive(decoder.decodeDouble())
+    }
+}
+
+object GsonByteSerializer : KSerializer<JsonPrimitive> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("percale.GsonPrimitiveByte", PrimitiveKind.BYTE)
+    override fun serialize(encoder: Encoder, value: JsonPrimitive) {
+        encoder.encodeByte(value.asByte)
+    }
+    override fun deserialize(decoder: Decoder): JsonPrimitive {
+        return JsonPrimitive(decoder.decodeByte())
+    }
+}
+
 object GsonLazyNumberSerializer : KSerializer<JsonPrimitive> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("percale.GsonLazyNumber", PrimitiveKind.DOUBLE)
     override fun serialize(encoder: Encoder, value: JsonPrimitive) {
@@ -184,6 +214,9 @@ object GsonElementSerializer : KSerializer<JsonElement> {
                             is Int -> GsonIntSerializer
                             is Long -> GsonLongSerializer
                             is Float -> GsonFloatSerializer
+                            is Double -> GsonDoubleSerializer
+                            is Byte -> GsonByteSerializer
+                            is Short -> GsonShortSerializer
                             is LazilyParsedNumber -> GsonLazyNumberSerializer
                             else -> {
                                 throw Exception("Err: bad input number type: $input was not a known number format of class ${input.asNumber::class.simpleName}")
