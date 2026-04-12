@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalSerializationApi::class)
+
 package io.ejekta.percale.reverse
 
 import kotlinx.serialization.ExperimentalSerializationApi

@@ -24,7 +24,7 @@ import net.minecraft.nbt.*
 object NbtStringSerializer : KSerializer<StringTag> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("percale.StringTag", PrimitiveKind.STRING)
     override fun serialize(encoder: Encoder, value: StringTag) {
-        encoder.encodeString(value.asString)
+        encoder.encodeString(value.asString().orElseThrow())
     }
     override fun deserialize(decoder: Decoder): StringTag {
         // If inverse, serialize
@@ -40,7 +40,7 @@ object NbtStringSerializer : KSerializer<StringTag> {
 object NbtIntSerializer : KSerializer<IntTag> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("percale.IntTag", PrimitiveKind.INT)
     override fun serialize(encoder: Encoder, value: IntTag) {
-        encoder.encodeInt(value.asInt)
+        encoder.encodeInt(value.asInt().orElseThrow())
     }
     override fun deserialize(decoder: Decoder): IntTag {
         return IntTag.valueOf(decoder.decodeInt())
@@ -50,7 +50,7 @@ object NbtIntSerializer : KSerializer<IntTag> {
 object NbtByteSerializer : KSerializer<ByteTag> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("percale.ByteTag", PrimitiveKind.BYTE)
     override fun serialize(encoder: Encoder, value: ByteTag) {
-        encoder.encodeByte(value.asByte)
+        encoder.encodeByte(value.asByte().orElseThrow())
     }
     override fun deserialize(decoder: Decoder): ByteTag {
         return ByteTag.valueOf(decoder.decodeByte())
@@ -60,7 +60,7 @@ object NbtByteSerializer : KSerializer<ByteTag> {
 object NbtLongSerializer : KSerializer<LongTag> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("percale.LongTag", PrimitiveKind.LONG)
     override fun serialize(encoder: Encoder, value: LongTag) {
-        encoder.encodeLong(value.asLong)
+        encoder.encodeLong(value.asLong().orElseThrow())
     }
     override fun deserialize(decoder: Decoder): LongTag {
         return LongTag.valueOf(decoder.decodeLong())
@@ -70,7 +70,7 @@ object NbtLongSerializer : KSerializer<LongTag> {
 object NbtFloatSerializer : KSerializer<FloatTag> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("percale.FloatTag", PrimitiveKind.FLOAT)
     override fun serialize(encoder: Encoder, value: FloatTag) {
-        encoder.encodeFloat(value.asFloat)
+        encoder.encodeFloat(value.asFloat().orElseThrow())
     }
     override fun deserialize(decoder: Decoder): FloatTag {
         return FloatTag.valueOf(decoder.decodeFloat())
@@ -80,7 +80,7 @@ object NbtFloatSerializer : KSerializer<FloatTag> {
 object NbtDoubleSerializer : KSerializer<DoubleTag> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("percale.DoubleTag", PrimitiveKind.DOUBLE)
     override fun serialize(encoder: Encoder, value: DoubleTag) {
-        encoder.encodeDouble(value.asDouble)
+        encoder.encodeDouble(value.asDouble().orElseThrow())
     }
     override fun deserialize(decoder: Decoder): DoubleTag {
         return DoubleTag.valueOf(decoder.decodeDouble())
@@ -90,7 +90,7 @@ object NbtDoubleSerializer : KSerializer<DoubleTag> {
 object NbtShortSerializer : KSerializer<ShortTag> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("percale.ShortTag", PrimitiveKind.LONG)
     override fun serialize(encoder: Encoder, value: ShortTag) {
-        encoder.encodeShort(value.asShort)
+        encoder.encodeShort(value.asShort().orElseThrow())
     }
     override fun deserialize(decoder: Decoder): ShortTag {
         return ShortTag.valueOf(decoder.decodeShort())
@@ -107,7 +107,7 @@ object NbtByteArraySerializer : KSerializer<ByteArrayTag> {
             (encoder as PassEncoder<Tag>).encodeFunc { value }
             return
         }
-        encoder.encodeSerializableValue(ser, value.asByteArray.toList())
+        encoder.encodeSerializableValue(ser, value.asByteArray().orElseThrow().toList())
     }
     override fun deserialize(decoder: Decoder): ByteArrayTag {
         val bytes = decoder.decodeSerializableValue(ser).toByteArray()
@@ -137,7 +137,7 @@ object CompoundTagSerializer : KSerializer<CompoundTag> {
         get() = MapSerializer(String.serializer(), TagSerializer)
     override val descriptor: SerialDescriptor = deferred { ser.descriptor }
     override fun serialize(encoder: Encoder, value: CompoundTag) {
-        encoder.encodeSerializableValue(ser, value.allKeys.associateWith { value.get(it)!! })
+        encoder.encodeSerializableValue(ser, value.keySet().associateWith { value.get(it)!! })
     }
     override fun deserialize(decoder: Decoder): CompoundTag {
         val nbtMap = decoder.decodeSerializableValue(ser)
@@ -159,7 +159,7 @@ object NbtIntArraySerializer : KSerializer<IntArrayTag> {
             (encoder as PassEncoder<Tag>).encodeFunc { value }
             return
         }
-        encoder.encodeSerializableValue(ser, value.asIntArray)
+        encoder.encodeSerializableValue(ser, value.asIntArray().orElseThrow())
     }
     override fun deserialize(decoder: Decoder): IntArrayTag {
         return IntArrayTag(decoder.decodeSerializableValue(ser))
@@ -176,7 +176,7 @@ object NbtLongArraySerializer : KSerializer<LongArrayTag> {
             (encoder as PassEncoder<Tag>).encodeFunc { value }
             return
         }
-        encoder.encodeSerializableValue(ser, value.asLongArray)
+        encoder.encodeSerializableValue(ser, value.asLongArray().orElseThrow())
     }
     override fun deserialize(decoder: Decoder): LongArrayTag {
         return LongArrayTag(decoder.decodeSerializableValue(ser))

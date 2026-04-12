@@ -3,5 +3,6 @@ plugins {
 }
 
 dependencies {
-    modRuntimeOnly "com.terraformersmc:modmenu:${mod_menu_version}"
+    // ModMenu disabled until a 26.1.2-compatible version is available
+    // runtimeOnly "com.terraformersmc:modmenu:${mod_menu_version}"
 }
